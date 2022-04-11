@@ -15,4 +15,5 @@ interface IDeFiAIMultiStrat {
 
     function deposit(address user, uint256 _wantAmt) external returns (uint256);
     function withdraw(address user, uint256 _wantAmt) external returns (uint256);
+    function balances(address user) external view returns (uint256);
 }

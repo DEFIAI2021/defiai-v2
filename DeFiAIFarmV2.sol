@@ -12,9 +12,7 @@ contract DeFiAIFarmV2 is IDeFiAIFarmV2, ReentrancyGuard, Ownable {
     using SafeERC20 for IERC20;
 
     struct UserInfo {
-        uint256 shares;
-        uint256 rewardDebt;
-        uint256 lastDepositedTime;
+        string upline;
     }
 
     struct PoolInfo {
@@ -28,19 +26,16 @@ contract DeFiAIFarmV2 is IDeFiAIFarmV2, ReentrancyGuard, Ownable {
     // Denominator for fee calculations.
     uint256 public constant FEE_DENOM = 10000;
 
-    // Early withdrawal period. User withdrawals within this period will be charged an exit fee.
-    uint256 public immutable  earlyExitPeriod;
-
     /* ========== STATE VARIABLES ========== */
 
     // Info of each pool.
     PoolInfo[] public  poolInfo;
 
     // Info of each user that stakes LP tokens.
-    mapping(uint256 => mapping(address => UserInfo)) public  userInfo;
+    mapping(address => UserInfo) public  userInfo;
   
-    // Fee paid for early withdrawals
-    uint256 public  earlyExitFee;
+    // Fee paid for withdrawals
+    uint256 public  withdrawalFee;
 
     // Developer address.
     address public devAddress;
@@ -50,7 +45,7 @@ contract DeFiAIFarmV2 is IDeFiAIFarmV2, ReentrancyGuard, Ownable {
     modifier validatePid(uint256 _pid) {
         require(
             _pid < poolInfo.length,
-            "MinoFarm::validatePid: Not exist"
+            "DeFiAIFarmV2::validatePid: Not exist"
         );
         _;
     }
@@ -58,7 +53,7 @@ contract DeFiAIFarmV2 is IDeFiAIFarmV2, ReentrancyGuard, Ownable {
     modifier onlyGovernance() {
         require(
             (msg.sender == devAddress || msg.sender == owner()),
-            "MinoFarm::onlyGovernance: Not gov"
+            "DeFiAIFarmV2::onlyGovernance: Not gov"
         );
         _;
     }
@@ -67,48 +62,35 @@ contract DeFiAIFarmV2 is IDeFiAIFarmV2, ReentrancyGuard, Ownable {
 
     constructor(
         address _devAddress,
-        uint256 _earlyExitFee,
-        uint256 _earlyExitPeriod
+        uint256 _withdrawalFee
     ) {
         devAddress = _devAddress;
-        earlyExitFee = _earlyExitFee;
-        earlyExitPeriod = _earlyExitPeriod;
+        withdrawalFee = _withdrawalFee;
     }
 
     /* ========== VIEWS ========== */
-
-    function getMultiplier(uint256 _from, uint256 _to)
-        public
-        
-        pure
-        returns (uint256)
-    {
-        return _to - _from;
-    }
 
     function poolLength() external view  returns (uint256) {
         return poolInfo.length;
     }
 
-    function stakedWantTokens(uint256 _pid, address _user)
-        external
-        
-        view
-        returns (uint256)
-    {
-        return userInfo[_pid][_user].shares;
+    function getTotalBalance(uint256 _pid, address _user) external view returns (uint256) {
+        PoolInfo memory pool = poolInfo[_pid];
+        return IDeFiAIMultiStrat(pool.strat).balances(_user);
     }
 
     /* ========== MUTATIVE FUNCTIONS ========== */
 
-    function deposit(uint256 _pid, uint256 _wantAmt)
+    function deposit(uint256 _pid, uint256 _wantAmt, string memory _referral)
         external
-        
         validatePid(_pid)
         nonReentrant
     {
         PoolInfo storage pool = poolInfo[_pid];
-        UserInfo storage user = userInfo[_pid][msg.sender];
+        UserInfo storage user = userInfo[msg.sender];
+        if (bytes(user.upline).length == 0) {
+            user.upline = _referral;
+        }
         if (_wantAmt > 0) {
             pool.want.safeTransferFrom(
                 address(msg.sender),
@@ -117,34 +99,30 @@ contract DeFiAIFarmV2 is IDeFiAIFarmV2, ReentrancyGuard, Ownable {
             );
 
             pool.want.safeIncreaseAllowance(pool.strat, _wantAmt);
-            uint256 sharesAdded = IDeFiAIMultiStrat(pool.strat).deposit(msg.sender, _wantAmt);
-            user.shares = user.shares + sharesAdded;
-            user.lastDepositedTime = block.timestamp;
+            IDeFiAIMultiStrat(pool.strat).deposit(msg.sender, _wantAmt);
         }
+        emit Deposit(msg.sender, _referral, _wantAmt, address(pool.want));
     }
 
     function withdraw(uint256 _pid, uint256 _wantAmt)
         public
-        
         validatePid(_pid)
         nonReentrant
     {
         PoolInfo storage pool = poolInfo[_pid];
-        UserInfo storage user = userInfo[_pid][msg.sender];
         if (_wantAmt > 0) {
             uint256 realAmt = IDeFiAIMultiStrat(pool.strat).withdraw(msg.sender, _wantAmt);
 
             _wantAmt = realAmt;
-            if (block.timestamp - user.lastDepositedTime < earlyExitPeriod) {
-                uint256 fee = _wantAmt * earlyExitFee / FEE_DENOM;
-                if (fee < pool.minFee) {
-                    fee = pool.minFee;
-                }
-                _wantAmt -= fee;
-                pool.want.safeTransfer(pool.strat, fee);
+            uint256 fee = _wantAmt * withdrawalFee / FEE_DENOM;
+            if (fee < pool.minFee) {
+                fee = pool.minFee;
             }
+            _wantAmt -= fee;
+            pool.want.safeTransfer(pool.strat, fee);
             pool.want.safeTransfer(address(msg.sender), _wantAmt);
         }
+        emit Withdraw(msg.sender, _wantAmt, address(pool.want));
     }
 
     /* ========== RESTRICTED FUNCTIONS ========== */
@@ -157,7 +135,7 @@ contract DeFiAIFarmV2 is IDeFiAIFarmV2, ReentrancyGuard, Ownable {
         external
         onlyGovernance
     {
-        require(_strat != address(0), "MinoFarm::add: Strat can not be zero address.");
+        require(_strat != address(0), "DeFiAIFarmV2::add: Strat can not be zero address.");
         poolInfo.push(
             PoolInfo({
                 want: _want,
@@ -167,7 +145,7 @@ contract DeFiAIFarmV2 is IDeFiAIFarmV2, ReentrancyGuard, Ownable {
         );
     }
 
-    function set(
+    function setMinWithdrawalFee(
         uint256 _pid,
         uint256 _minFee
     )
@@ -176,22 +154,22 @@ contract DeFiAIFarmV2 is IDeFiAIFarmV2, ReentrancyGuard, Ownable {
         validatePid(_pid)
     {
         poolInfo[_pid].minFee = _minFee;
+        emit UpdateMinWithdrawalFee(_pid, _minFee);
     }
 
-    function setEarlyExitFee(uint256 _earlyExitFee)
+    function setWithdrawalFee(uint256 _withdrawalFee)
         external
-        
         onlyGovernance
     {
-        earlyExitFee = _earlyExitFee;
+        require(_withdrawalFee < FEE_DENOM, "DeFiAIFarmV2::setWithdrawalFee: Fee > max");
+        withdrawalFee = _withdrawalFee;
     }
 
     function setDevAddress(address _devAddress)
         external
-        
         onlyGovernance
     {   
-        require(_devAddress != address(0), "MinoFarm::set: Zero address");
+        require(_devAddress != address(0), "DeFiAIFarmV2::set: Zero address");
         devAddress = _devAddress;
     }
     
