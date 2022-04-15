@@ -40,6 +40,9 @@ contract DeFiAIFarmV2 is IDeFiAIFarmV2, ReentrancyGuard, Ownable {
     // Developer address.
     address public devAddress;
 
+    // Init state
+    bool public isInit;
+
     /* ========== MODIFIERS ========== */
 
     modifier validatePid(uint256 _pid) {
@@ -127,50 +130,30 @@ contract DeFiAIFarmV2 is IDeFiAIFarmV2, ReentrancyGuard, Ownable {
 
     /* ========== RESTRICTED FUNCTIONS ========== */
     
-    function add(
-        IERC20 _want,
-        address _strat,
-        uint256 _minFee
-    )
-        external
-        onlyGovernance
-    {
-        require(_strat != address(0), "DeFiAIFarmV2::add: Strat can not be zero address.");
+    function initialize(
+        IERC20 _want0, 
+        address _strat0, 
+        uint256 _minFee0, 
+        IERC20 _want1, 
+        address _strat1, 
+        uint256 _minFee1
+    ) external onlyGovernance {
+        require(!isInit, "DeFiAIFarmV2::setStrats: Already initialized");
+        require(_strat0 != address(0) && _strat1 != address(0), "DeFiAIFarmV2::setStrats: Strat can not be zero address.");
         poolInfo.push(
             PoolInfo({
-                want: _want,
-                minFee: _minFee,
-                strat: _strat
+                want: _want0,
+                minFee: _minFee0,
+                strat: _strat0
             })
         );
-    }
-
-    function setMinWithdrawalFee(
-        uint256 _pid,
-        uint256 _minFee
-    )
-        external
-        onlyGovernance
-        validatePid(_pid)
-    {
-        poolInfo[_pid].minFee = _minFee;
-        emit UpdateMinWithdrawalFee(_pid, _minFee);
-    }
-
-    function setWithdrawalFee(uint256 _withdrawalFee)
-        external
-        onlyGovernance
-    {
-        require(_withdrawalFee < FEE_DENOM, "DeFiAIFarmV2::setWithdrawalFee: Fee > max");
-        withdrawalFee = _withdrawalFee;
-    }
-
-    function setDevAddress(address _devAddress)
-        external
-        onlyGovernance
-    {   
-        require(_devAddress != address(0), "DeFiAIFarmV2::set: Zero address");
-        devAddress = _devAddress;
-    }
-    
+        poolInfo.push(
+            PoolInfo({
+                want: _want1,
+                minFee: _minFee1,
+                strat: _strat1
+            })
+        );
+        isInit = true;
+    }    
 }
