@@ -77,7 +77,12 @@ contract DeFiAIFarmV2 is IDeFiAIFarmV2, ReentrancyGuard, Ownable {
         return poolInfo.length;
     }
 
-    function getTotalBalance(uint256 _pid, address _user) external view returns (uint256) {
+    function getTotalBalance(uint256 _pid, address _user) 
+    external 
+    view 
+    validatePid(_pid) 
+    returns (uint256) 
+    {
         PoolInfo memory pool = poolInfo[_pid];
         return IDeFiAIMultiStrat(pool.strat).balances(_user);
     }
