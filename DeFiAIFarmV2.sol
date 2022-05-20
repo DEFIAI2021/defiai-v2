@@ -11,10 +11,6 @@ import "./interfaces/IDeFiAIMultiStrat.sol";
 contract DeFiAIFarmV2 is IDeFiAIFarmV2, ReentrancyGuard, Ownable {
     using SafeERC20 for IERC20;
 
-    struct UserInfo {
-        string upline;
-    }
-
     struct PoolInfo {
         IERC20 want;
         uint256 minFee;
@@ -95,10 +91,6 @@ contract DeFiAIFarmV2 is IDeFiAIFarmV2, ReentrancyGuard, Ownable {
         nonReentrant
     {
         PoolInfo storage pool = poolInfo[_pid];
-        UserInfo storage user = userInfo[msg.sender];
-        if (bytes(user.upline).length == 0) {
-            user.upline = _referral;
-        }
         if (_wantAmt > 0) {
             pool.want.safeTransferFrom(
                 address(msg.sender),
@@ -107,9 +99,9 @@ contract DeFiAIFarmV2 is IDeFiAIFarmV2, ReentrancyGuard, Ownable {
             );
 
             pool.want.safeIncreaseAllowance(pool.strat, _wantAmt);
-            IDeFiAIMultiStrat(pool.strat).deposit(msg.sender, _wantAmt);
+            IDeFiAIMultiStrat(pool.strat).deposit(msg.sender, _wantAmt, address(pool.want));
         }
-        emit Deposit(msg.sender, _referral, _wantAmt, address(pool.want));
+        emit Deposit(msg.sender, _wantAmt, address(pool.want));
     }
 
     function withdraw(uint256 _pid, uint256 _wantAmt)
@@ -118,8 +110,9 @@ contract DeFiAIFarmV2 is IDeFiAIFarmV2, ReentrancyGuard, Ownable {
         nonReentrant
     {
         PoolInfo storage pool = poolInfo[_pid];
+        uint256 realAmt;
         if (_wantAmt > 0) {
-            uint256 realAmt = IDeFiAIMultiStrat(pool.strat).withdraw(msg.sender, _wantAmt);
+            realAmt = IDeFiAIMultiStrat(pool.strat).withdraw(msg.sender, _wantAmt, address(pool.want));
 
             _wantAmt = realAmt;
             uint256 fee = _wantAmt * withdrawalFee / FEE_DENOM;
@@ -130,7 +123,7 @@ contract DeFiAIFarmV2 is IDeFiAIFarmV2, ReentrancyGuard, Ownable {
             pool.want.safeTransfer(pool.strat, fee);
             pool.want.safeTransfer(address(msg.sender), _wantAmt);
         }
-        emit Withdraw(msg.sender, _wantAmt, address(pool.want));
+        emit Withdraw(msg.sender, realAmt, address(pool.want));
     }
 
     /* ========== RESTRICTED FUNCTIONS ========== */
