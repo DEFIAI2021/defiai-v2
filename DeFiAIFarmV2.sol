@@ -5,11 +5,23 @@ pragma solidity 0.8.4;
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
-import "./interfaces/IDeFiAIFarmV2.sol";
 import "./interfaces/IDeFiAIMultiStrat.sol";
 
-contract DeFiAIFarmV2 is IDeFiAIFarmV2, ReentrancyGuard, Ownable {
+contract DeFiAIFarmV2 is ReentrancyGuard, Ownable {
     using SafeERC20 for IERC20;
+
+    /* ========== EVENTS ============= */
+
+    event Deposit(address indexed user, uint256 amount, address wantAddress);
+    event Withdraw(address indexed user, uint256 amount, address wantAddress);
+    event UpdateWithdrawalFee(uint256 fee);
+    event UpdateMinWithdrawalFee(uint256 pid, uint256 minFee);
+
+    /* ========== STRUCTS ============= */
+
+    struct UserInfo {
+        string upline;
+    }
 
     struct PoolInfo {
         IERC20 want;
@@ -26,9 +38,6 @@ contract DeFiAIFarmV2 is IDeFiAIFarmV2, ReentrancyGuard, Ownable {
 
     // Info of each pool.
     PoolInfo[] public  poolInfo;
-
-    // Info of each user that stakes LP tokens.
-    mapping(address => UserInfo) public  userInfo;
   
     // Fee paid for withdrawals
     uint256 public  withdrawalFee;
@@ -85,7 +94,7 @@ contract DeFiAIFarmV2 is IDeFiAIFarmV2, ReentrancyGuard, Ownable {
 
     /* ========== MUTATIVE FUNCTIONS ========== */
 
-    function deposit(uint256 _pid, uint256 _wantAmt, string memory _referral)
+    function deposit(uint256 _pid, uint256 _wantAmt)
         external
         validatePid(_pid)
         nonReentrant
@@ -119,6 +128,7 @@ contract DeFiAIFarmV2 is IDeFiAIFarmV2, ReentrancyGuard, Ownable {
             if (fee < pool.minFee) {
                 fee = pool.minFee;
             }
+            require(_wantAmt >= fee, "DeFiAIFarmV2::withdraw: _wantAmt < fee");
             _wantAmt -= fee;
             pool.want.safeTransfer(pool.strat, fee);
             pool.want.safeTransfer(address(msg.sender), _wantAmt);
