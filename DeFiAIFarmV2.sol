@@ -4,18 +4,15 @@ pragma solidity 0.8.4;
 
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
-import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "./interfaces/IDeFiAIMultiStrat.sol";
 
-contract DeFiAIFarmV2 is ReentrancyGuard, Ownable {
+contract DeFiAIFarmV2 is Ownable {
     using SafeERC20 for IERC20;
 
     /* ========== EVENTS ============= */
 
     event Deposit(address indexed user, uint256 amount, address wantAddress);
     event Withdraw(address indexed user, uint256 amount, address wantAddress);
-    event UpdateWithdrawalFee(uint256 fee);
-    event UpdateMinWithdrawalFee(uint256 pid, uint256 minFee);
 
     /* ========== STRUCTS ============= */
 
@@ -97,7 +94,6 @@ contract DeFiAIFarmV2 is ReentrancyGuard, Ownable {
     function deposit(uint256 _pid, uint256 _wantAmt)
         external
         validatePid(_pid)
-        nonReentrant
     {
         PoolInfo storage pool = poolInfo[_pid];
         if (_wantAmt > 0) {
@@ -116,7 +112,6 @@ contract DeFiAIFarmV2 is ReentrancyGuard, Ownable {
     function withdraw(uint256 _pid, uint256 _wantAmt)
         public
         validatePid(_pid)
-        nonReentrant
     {
         PoolInfo storage pool = poolInfo[_pid];
         uint256 realAmt;
@@ -139,27 +134,17 @@ contract DeFiAIFarmV2 is ReentrancyGuard, Ownable {
     /* ========== RESTRICTED FUNCTIONS ========== */
     
     function initialize(
-        IERC20 _want0, 
-        address _strat0, 
-        uint256 _minFee0, 
-        IERC20 _want1, 
-        address _strat1, 
-        uint256 _minFee1
+        IERC20 _want, 
+        address _strat, 
+        uint256 _minFee
     ) external onlyGovernance {
         require(!isInit, "DeFiAIFarmV2::setStrats: Already initialized");
-        require(_strat0 != address(0) && _strat1 != address(0), "DeFiAIFarmV2::setStrats: Strat can not be zero address.");
+        require(_strat != address(0), "DeFiAIFarmV2::setStrats: Strat can not be zero address.");
         poolInfo.push(
             PoolInfo({
-                want: _want0,
-                minFee: _minFee0,
-                strat: _strat0
-            })
-        );
-        poolInfo.push(
-            PoolInfo({
-                want: _want1,
-                minFee: _minFee1,
-                strat: _strat1
+                want: _want,
+                minFee: _minFee,
+                strat: _strat
             })
         );
         isInit = true;

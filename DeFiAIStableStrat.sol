@@ -9,6 +9,7 @@ import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/security/Pausable.sol";
 import "./interfaces/IDeFiAIMultiStrat.sol";
+import "./interfaces/IDeFiAIStrat.sol";
 import "../pcs/interfaces/IPancakeswapFarm.sol";
 import "../acs/interfaces/IStableSwap.sol";
 
@@ -146,6 +147,8 @@ contract DeFiAIStableStrat is IDeFiAIMultiStrat, Ownable, Pausable {
     // Withdrawal multiplier to account for slippage 
     uint256 public withdrawalMultiplier;
 
+    address public stratAddress;
+
     uint8 public activePid;
 
     bool public isInit;
@@ -153,8 +156,6 @@ contract DeFiAIStableStrat is IDeFiAIMultiStrat, Ownable, Pausable {
     FarmInfo[3] public farmInfo;
 
     mapping(address => int128) public swapPid;
-
-    mapping(address => uint256) public balances;
 
     /* ========== MODIFIERS ========== */
 
@@ -182,7 +183,8 @@ contract DeFiAIStableStrat is IDeFiAIMultiStrat, Ownable, Pausable {
         address _usdt, 
         address _devAddress, 
         address _defiaiFarmAddress, 
-        uint256 _withdrawalMultiplier
+        uint256 _withdrawalMultiplier,
+        address _stratAddress
     ) {
         swapRouterAddress = _swapRouterAddress;
         busd = _busd;
@@ -192,6 +194,7 @@ contract DeFiAIStableStrat is IDeFiAIMultiStrat, Ownable, Pausable {
         devAddress = _devAddress;
         defiaiFarmAddress = _defiaiFarmAddress;
         withdrawalMultiplier = _withdrawalMultiplier;
+        stratAddress = _stratAddress;
     }
 
     function init(
@@ -209,6 +212,10 @@ contract DeFiAIStableStrat is IDeFiAIMultiStrat, Ownable, Pausable {
         isInit = true;
     }
 
+    function balances(address user) external view override returns (uint256) {
+        return IDeFiAIStrat(stratAddress).getUserWant(user);
+    }
+
     /* ========== MUTATIVE FUNCTIONS ========== */
 
     function deposit(address user, uint256 _wantAmt, address _wantAddress)
@@ -224,7 +231,7 @@ contract DeFiAIStableStrat is IDeFiAIMultiStrat, Ownable, Pausable {
             address(this),
             _wantAmt
         );
-        balances[user] += _wantAmt;
+        _wantAmt = IDeFiAIStrat(stratAddress).deposit(user, _wantAmt);
 
         _convertWantToLp(
             _wantAddress,
@@ -243,7 +250,7 @@ contract DeFiAIStableStrat is IDeFiAIMultiStrat, Ownable, Pausable {
         returns (uint256)
     {
         require(_wantAmt > 0, "DeFiAIMultiStrat::withdraw: Zero _wantAmt");
-        balances[user] -= _wantAmt;
+        _wantAmt = IDeFiAIStrat(stratAddress).withdraw(user, _wantAmt);
         _unfarm(_wantAmt);
 
         _convertLpToWant(
@@ -258,9 +265,11 @@ contract DeFiAIStableStrat is IDeFiAIMultiStrat, Ownable, Pausable {
         return _wantAmt;
     }
 
-    function changeActiveStrategy(uint8 _newPid) external onlyFarms {
+    function changeActiveStrategy(uint8 _newPid) external onlyGovernance {
         (uint256 _pcsBalance, ) = IPancakeswapFarm(farmInfo[activePid].farmAddress).userInfo(farmInfo[activePid].pid, address(this));
+        require(_pcsBalance > 0, "Balance == 0");
         IPancakeswapFarm(farmInfo[activePid].farmAddress).withdraw(farmInfo[activePid].pid, _pcsBalance);
+        IERC20(farmInfo[activePid].lpAddress).safeIncreaseAllowance(farmInfo[activePid].routerAddress, _pcsBalance);
 
         IUniswapV2Router01(farmInfo[activePid].routerAddress).removeLiquidity(busd, usdt, _pcsBalance, 0, 0, address(this), block.timestamp);    
         uint256 _busd = IERC20(busd).balanceOf(address(this));
@@ -281,6 +290,10 @@ contract DeFiAIStableStrat is IDeFiAIMultiStrat, Ownable, Pausable {
             address(this),
             block.timestamp
         );
+
+        uint256 _newLp = IERC20(farmInfo[_newPid].lpAddress).balanceOf(address(this));
+        IERC20(farmInfo[_newPid].lpAddress).safeIncreaseAllowance(farmInfo[_newPid].farmAddress, _newLp);
+        IPancakeswapFarm(farmInfo[_newPid].farmAddress).deposit(farmInfo[_newPid].pid, _newLp);
 
         activePid = _newPid;
     }
