@@ -317,11 +317,6 @@ contract DeFiAIStableStrat is IDeFiAIMultiStrat, Ownable, Pausable {
         _unpause();
     }
 
-    function updateWithdrawalMultiplier(uint256 _withdrawalMultiplier) external onlyGovernance {
-        require(_withdrawalMultiplier <= DIVISOR, "DeFiAIMultiStrat::updateWithdrawalMultiplier: Multiplier > max");
-        withdrawalMultiplier = _withdrawalMultiplier;
-    }
-
     /* ========== PRIVATE FUNCTIONS ========== */
 
     function _farm() internal virtual {
