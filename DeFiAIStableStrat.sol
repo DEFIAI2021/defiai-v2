@@ -9,7 +9,6 @@ import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/security/Pausable.sol";
 import "./interfaces/IDeFiAIMultiStrat.sol";
-import "./interfaces/IDeFiAIStrat.sol";
 import "../pcs/interfaces/IPancakeswapFarm.sol";
 import "../acs/interfaces/IStableSwap.sol";
 
@@ -157,6 +156,8 @@ contract DeFiAIStableStrat is IDeFiAIMultiStrat, Ownable, Pausable {
 
     mapping(address => int128) public swapPid;
 
+    mapping(address => uint256) public balances;
+
     /* ========== MODIFIERS ========== */
 
     modifier onlyFarms() {
@@ -212,10 +213,6 @@ contract DeFiAIStableStrat is IDeFiAIMultiStrat, Ownable, Pausable {
         isInit = true;
     }
 
-    function balances(address user) external view override returns (uint256) {
-        return IDeFiAIStrat(stratAddress).getUserWant(user);
-    }
-
     /* ========== MUTATIVE FUNCTIONS ========== */
 
     function deposit(address user, uint256 _wantAmt, address _wantAddress)
@@ -231,7 +228,7 @@ contract DeFiAIStableStrat is IDeFiAIMultiStrat, Ownable, Pausable {
             address(this),
             _wantAmt
         );
-        _wantAmt = IDeFiAIStrat(stratAddress).deposit(user, _wantAmt);
+        balances[user] += _wantAmt;
 
         _convertWantToLp(
             _wantAddress,
@@ -250,7 +247,7 @@ contract DeFiAIStableStrat is IDeFiAIMultiStrat, Ownable, Pausable {
         returns (uint256)
     {
         require(_wantAmt > 0, "DeFiAIMultiStrat::withdraw: Zero _wantAmt");
-        _wantAmt = IDeFiAIStrat(stratAddress).withdraw(user, _wantAmt);
+        balances[user] -= _wantAmt;
         _unfarm(_wantAmt);
 
         _convertLpToWant(
