@@ -26,10 +26,11 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
         "initialize",
         usdt.address,
         strat.address,
-        parseEther("1")
       )
     );
   }
+
+  console.log("FARM GOV",deployer)
 };
 export default func;
 func.tags = ["DEFIAIFarm_init"];

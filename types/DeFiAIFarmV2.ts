@@ -24,6 +24,7 @@ export interface DeFiAIFarmV2Interface extends utils.Interface {
     "deposit(uint256)": FunctionFragment;
     "devAddress()": FunctionFragment;
     "getDevAddress()": FunctionFragment;
+    "getPoolInfo()": FunctionFragment;
     "getTotalBalance(address)": FunctionFragment;
     "initialize(address,address)": FunctionFragment;
     "isInit()": FunctionFragment;
@@ -45,6 +46,10 @@ export interface DeFiAIFarmV2Interface extends utils.Interface {
   ): string;
   encodeFunctionData(
     functionFragment: "getDevAddress",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
+    functionFragment: "getPoolInfo",
     values?: undefined
   ): string;
   encodeFunctionData(
@@ -76,6 +81,10 @@ export interface DeFiAIFarmV2Interface extends utils.Interface {
   decodeFunctionResult(functionFragment: "devAddress", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "getDevAddress",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "getPoolInfo",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
@@ -168,6 +177,8 @@ export interface DeFiAIFarmV2 extends BaseContract {
 
     getDevAddress(overrides?: CallOverrides): Promise<[string]>;
 
+    getPoolInfo(overrides?: CallOverrides): Promise<[string]>;
+
     getTotalBalance(
       _user: string,
       overrides?: CallOverrides
@@ -213,6 +224,8 @@ export interface DeFiAIFarmV2 extends BaseContract {
 
   getDevAddress(overrides?: CallOverrides): Promise<string>;
 
+  getPoolInfo(overrides?: CallOverrides): Promise<string>;
+
   getTotalBalance(_user: string, overrides?: CallOverrides): Promise<BigNumber>;
 
   initialize(
@@ -251,6 +264,8 @@ export interface DeFiAIFarmV2 extends BaseContract {
     devAddress(overrides?: CallOverrides): Promise<string>;
 
     getDevAddress(overrides?: CallOverrides): Promise<string>;
+
+    getPoolInfo(overrides?: CallOverrides): Promise<string>;
 
     getTotalBalance(
       _user: string,
@@ -326,6 +341,8 @@ export interface DeFiAIFarmV2 extends BaseContract {
 
     getDevAddress(overrides?: CallOverrides): Promise<BigNumber>;
 
+    getPoolInfo(overrides?: CallOverrides): Promise<BigNumber>;
+
     getTotalBalance(
       _user: string,
       overrides?: CallOverrides
@@ -369,6 +386,8 @@ export interface DeFiAIFarmV2 extends BaseContract {
     devAddress(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
     getDevAddress(overrides?: CallOverrides): Promise<PopulatedTransaction>;
+
+    getPoolInfo(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
     getTotalBalance(
       _user: string,

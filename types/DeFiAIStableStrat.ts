@@ -23,6 +23,7 @@ export interface DeFiAIStableStratInterface extends utils.Interface {
     "DIVISOR()": FunctionFragment;
     "SLIPPAGE_FACTOR_MAX()": FunctionFragment;
     "activePid()": FunctionFragment;
+    "balances(address)": FunctionFragment;
     "busd()": FunctionFragment;
     "changeActiveStrategy(uint8)": FunctionFragment;
     "defiaiFarmAddress()": FunctionFragment;
@@ -53,6 +54,7 @@ export interface DeFiAIStableStratInterface extends utils.Interface {
     values?: undefined
   ): string;
   encodeFunctionData(functionFragment: "activePid", values?: undefined): string;
+  encodeFunctionData(functionFragment: "balances", values: [string]): string;
   encodeFunctionData(functionFragment: "busd", values?: undefined): string;
   encodeFunctionData(
     functionFragment: "changeActiveStrategy",
@@ -128,6 +130,7 @@ export interface DeFiAIStableStratInterface extends utils.Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(functionFragment: "activePid", data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: "balances", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "busd", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "changeActiveStrategy",
@@ -268,6 +271,8 @@ export interface DeFiAIStableStrat extends BaseContract {
 
     activePid(overrides?: CallOverrides): Promise<[number]>;
 
+    balances(user: string, overrides?: CallOverrides): Promise<[BigNumber]>;
+
     busd(overrides?: CallOverrides): Promise<[string]>;
 
     changeActiveStrategy(
@@ -373,6 +378,8 @@ export interface DeFiAIStableStrat extends BaseContract {
 
   activePid(overrides?: CallOverrides): Promise<number>;
 
+  balances(user: string, overrides?: CallOverrides): Promise<BigNumber>;
+
   busd(overrides?: CallOverrides): Promise<string>;
 
   changeActiveStrategy(
@@ -477,6 +484,8 @@ export interface DeFiAIStableStrat extends BaseContract {
     SLIPPAGE_FACTOR_MAX(overrides?: CallOverrides): Promise<BigNumber>;
 
     activePid(overrides?: CallOverrides): Promise<number>;
+
+    balances(user: string, overrides?: CallOverrides): Promise<BigNumber>;
 
     busd(overrides?: CallOverrides): Promise<string>;
 
@@ -620,6 +629,8 @@ export interface DeFiAIStableStrat extends BaseContract {
 
     activePid(overrides?: CallOverrides): Promise<BigNumber>;
 
+    balances(user: string, overrides?: CallOverrides): Promise<BigNumber>;
+
     busd(overrides?: CallOverrides): Promise<BigNumber>;
 
     changeActiveStrategy(
@@ -706,6 +717,11 @@ export interface DeFiAIStableStrat extends BaseContract {
     ): Promise<PopulatedTransaction>;
 
     activePid(overrides?: CallOverrides): Promise<PopulatedTransaction>;
+
+    balances(
+      user: string,
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
 
     busd(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 

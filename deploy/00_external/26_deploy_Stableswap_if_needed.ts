@@ -39,104 +39,104 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
     skipIfAlreadyDeployed: true,
   });
 
-  // await catchUnknownSigner(
-  //   execute(
-  //     "BUSD",
-  //     { from: deployer, log: true },
-  //     "devMint",
-  //     parseEther("1000000")
-  //   )
-  // );
+  await catchUnknownSigner(
+    execute(
+      "BUSD",
+      { from: deployer, log: true },
+      "devMint",
+      parseEther("1000000")
+    )
+  );
 
-  // await catchUnknownSigner(
-  //   execute(
-  //     "BUSD",
-  //     { from: deployer, log: true },
-  //     "approve",
-  //     stableSwap.address,
-  //     parseEther("1000000")
-  //   )
-  // );
+  await catchUnknownSigner(
+    execute(
+      "BUSD",
+      { from: deployer, log: true },
+      "approve",
+      stableSwap.address,
+      parseEther("1000000")
+    )
+  );
 
-  // await catchUnknownSigner(
-  //   execute(
-  //     "USDT",
-  //     { from: deployer, log: true },
-  //     "devMint",
-  //     parseEther("1000000")
-  //   )
-  // );
+  await catchUnknownSigner(
+    execute(
+      "USDT",
+      { from: deployer, log: true },
+      "devMint",
+      parseEther("1000000")
+    )
+  );
 
-  // await catchUnknownSigner(
-  //   execute(
-  //     "USDT",
-  //     { from: deployer, log: true },
-  //     "approve",
-  //     stableSwap.address,
-  //     parseEther("1000000")
-  //   )
-  // );
+  await catchUnknownSigner(
+    execute(
+      "USDT",
+      { from: deployer, log: true },
+      "approve",
+      stableSwap.address,
+      parseEther("1000000")
+    )
+  );
 
-  // await catchUnknownSigner(
-  //   execute(
-  //     "DAI",
-  //     { from: deployer, log: true },
-  //     "devMint",
-  //     parseEther("1000000")
-  //   )
-  // );
+  await catchUnknownSigner(
+    execute(
+      "DAI",
+      { from: deployer, log: true },
+      "devMint",
+      parseEther("1000000")
+    )
+  );
 
-  // await catchUnknownSigner(
-  //   execute(
-  //     "DAI",
-  //     { from: deployer, log: true },
-  //     "approve",
-  //     stableSwap.address,
-  //     parseEther("1000000")
-  //   )
-  // );
+  await catchUnknownSigner(
+    execute(
+      "DAI",
+      { from: deployer, log: true },
+      "approve",
+      stableSwap.address,
+      parseEther("1000000")
+    )
+  );
 
-  // await catchUnknownSigner(
-  //   execute(
-  //     "USDC",
-  //     { from: deployer, log: true },
-  //     "devMint",
-  //     parseEther("1000000")
-  //   )
-  // );
+  await catchUnknownSigner(
+    execute(
+      "USDC",
+      { from: deployer, log: true },
+      "devMint",
+      parseEther("1000000")
+    )
+  );
 
-  // await catchUnknownSigner(
-  //   execute(
-  //     "USDC",
-  //     { from: deployer, log: true },
-  //     "approve",
-  //     stableSwap.address,
-  //     parseEther("1000000")
-  //   )
-  // );
+  await catchUnknownSigner(
+    execute(
+      "USDC",
+      { from: deployer, log: true },
+      "approve",
+      stableSwap.address,
+      parseEther("1000000")
+    )
+  );
 
   // await Promise.all([busd1, busd2, usdt1, usdt2, dai1, dai2, usdc1, usdc2]);
 
-  // await execute(
-  //   "CurveLpToken",
-  //   { from: deployer },
-  //   "set_minter",
-  //   stableSwap.address
-  // );
-  // await catchUnknownSigner(
-  //   execute(
-  //     "Stableswap",
-  //     { from: deployer, log: true },
-  //     "add_liquidity",
-  //     [
-  //       parseEther("1000000"),
-  //       parseEther("1000000"),
-  //       parseEther("1000000"),
-  //       parseEther("1000000"),
-  //     ],
-  //     0
-  //   )
-  // );
+  await execute(
+    "CurveLpToken",
+    { from: deployer },
+    "set_minter",
+    stableSwap.address
+  );
+  await catchUnknownSigner(
+    execute(
+      "Stableswap",
+      { from: deployer, log: true },
+      "add_liquidity",
+      [
+        parseEther("1000000"),
+        parseEther("1000000"),
+        parseEther("1000000"),
+        parseEther("1000000"),
+      ],
+      0
+    )
+  );
 };
 
 export default func;
