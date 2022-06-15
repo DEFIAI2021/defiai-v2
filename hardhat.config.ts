@@ -78,7 +78,7 @@ const config: HardhatUserConfig = {
   },
   namedAccounts: {
     deployer: {
-      default: "0xf93eB86071513A16E5a30440611E788dc05D922a",
+      default: "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266",
       // default: "0x37ad7978bfFCADBEcc002a6E08bCFcF7F5c311B1",
       // default: "0x6f1a329728634a9fef7fc9aFEB772ceE9721b990",
       bsctestnet: "0x6f1a329728634a9fef7fc9aFEB772ceE9721b990",
@@ -86,7 +86,7 @@ const config: HardhatUserConfig = {
     },
 
     dev: {
-      default: "0x4039df75f6990eef6f0cDF832e30C5a8D208671a",
+      default: "0x70997970C51812dc3A010C7d01b50e0d17dc79C8",
       // default: "0x70997970C51812dc3A010C7d01b50e0d17dc79C8",
       // default: "0x84e570e1cC2588c6Ed2a4CB7d94b86493B938d45",
       // default: "0xE3B85376274989B45B2AD3D85AdE3c283f67aa89",
@@ -114,15 +114,15 @@ const config: HardhatUserConfig = {
       accounts: accounts(process.env.HARDHAT_FORK),
       initialBaseFeePerGas: 0, // workaround from https://github.com/sc-forks/solidity-coverage/issues/652#issuecomment-896330136 . Remove when that issue is closed.
       allowUnlimitedContractSize: true,
-      tags: ["L1", "L2"],
-      forking: process.env.HARDHAT_FORK
-        ? {
-            url: node_url(process.env.HARDHAT_FORK),
-            blockNumber: process.env.HARDHAT_FORK_NUMBER
-              ? parseInt(process.env.HARDHAT_FORK_NUMBER)
-              : undefined,
-          }
-        : undefined,
+      tags: ["testnet","L1", "L2"],
+      // forking: process.env.HARDHAT_FORK
+      //   ? {
+      //       url: node_url(process.env.HARDHAT_FORK),
+      //       blockNumber: process.env.HARDHAT_FORK_NUMBER
+      //         ? parseInt(process.env.HARDHAT_FORK_NUMBER)
+      //         : undefined,
+      //     }
+      //   : undefined,
       deploy: ["deploy"],
       saveDeployments: false,
       // forking: {
