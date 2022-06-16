@@ -107,6 +107,7 @@ contract DeFiAIFarmV2 is Ownable {
 
         poolInfo.want.safeTransfer(address(msg.sender), _wantAmt);
         emit Withdraw(msg.sender, _wantAmt, address(poolInfo.want));
+
     }
 
     /* ========== RESTRICTED FUNCTIONS ========== */

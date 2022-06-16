@@ -25,7 +25,9 @@ export interface IBEP20Interface extends utils.Interface {
     "balanceOf(address)": FunctionFragment;
     "decimals()": FunctionFragment;
     "getOwner()": FunctionFragment;
+    "maxSupply()": FunctionFragment;
     "name()": FunctionFragment;
+    "preMineSupply()": FunctionFragment;
     "symbol()": FunctionFragment;
     "totalSupply()": FunctionFragment;
     "transfer(address,uint256)": FunctionFragment;
@@ -43,7 +45,12 @@ export interface IBEP20Interface extends utils.Interface {
   encodeFunctionData(functionFragment: "balanceOf", values: [string]): string;
   encodeFunctionData(functionFragment: "decimals", values?: undefined): string;
   encodeFunctionData(functionFragment: "getOwner", values?: undefined): string;
+  encodeFunctionData(functionFragment: "maxSupply", values?: undefined): string;
   encodeFunctionData(functionFragment: "name", values?: undefined): string;
+  encodeFunctionData(
+    functionFragment: "preMineSupply",
+    values?: undefined
+  ): string;
   encodeFunctionData(functionFragment: "symbol", values?: undefined): string;
   encodeFunctionData(
     functionFragment: "totalSupply",
@@ -63,7 +70,12 @@ export interface IBEP20Interface extends utils.Interface {
   decodeFunctionResult(functionFragment: "balanceOf", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "decimals", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "getOwner", data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: "maxSupply", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "name", data: BytesLike): Result;
+  decodeFunctionResult(
+    functionFragment: "preMineSupply",
+    data: BytesLike
+  ): Result;
   decodeFunctionResult(functionFragment: "symbol", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "totalSupply",
@@ -127,7 +139,7 @@ export interface IBEP20 extends BaseContract {
 
   functions: {
     allowance(
-      owner: string,
+      _owner: string,
       spender: string,
       overrides?: CallOverrides
     ): Promise<[BigNumber]>;
@@ -144,7 +156,11 @@ export interface IBEP20 extends BaseContract {
 
     getOwner(overrides?: CallOverrides): Promise<[string]>;
 
+    maxSupply(overrides?: CallOverrides): Promise<[BigNumber]>;
+
     name(overrides?: CallOverrides): Promise<[string]>;
+
+    preMineSupply(overrides?: CallOverrides): Promise<[BigNumber]>;
 
     symbol(overrides?: CallOverrides): Promise<[string]>;
 
@@ -165,7 +181,7 @@ export interface IBEP20 extends BaseContract {
   };
 
   allowance(
-    owner: string,
+    _owner: string,
     spender: string,
     overrides?: CallOverrides
   ): Promise<BigNumber>;
@@ -182,7 +198,11 @@ export interface IBEP20 extends BaseContract {
 
   getOwner(overrides?: CallOverrides): Promise<string>;
 
+  maxSupply(overrides?: CallOverrides): Promise<BigNumber>;
+
   name(overrides?: CallOverrides): Promise<string>;
+
+  preMineSupply(overrides?: CallOverrides): Promise<BigNumber>;
 
   symbol(overrides?: CallOverrides): Promise<string>;
 
@@ -203,7 +223,7 @@ export interface IBEP20 extends BaseContract {
 
   callStatic: {
     allowance(
-      owner: string,
+      _owner: string,
       spender: string,
       overrides?: CallOverrides
     ): Promise<BigNumber>;
@@ -220,7 +240,11 @@ export interface IBEP20 extends BaseContract {
 
     getOwner(overrides?: CallOverrides): Promise<string>;
 
+    maxSupply(overrides?: CallOverrides): Promise<BigNumber>;
+
     name(overrides?: CallOverrides): Promise<string>;
+
+    preMineSupply(overrides?: CallOverrides): Promise<BigNumber>;
 
     symbol(overrides?: CallOverrides): Promise<string>;
 
@@ -266,7 +290,7 @@ export interface IBEP20 extends BaseContract {
 
   estimateGas: {
     allowance(
-      owner: string,
+      _owner: string,
       spender: string,
       overrides?: CallOverrides
     ): Promise<BigNumber>;
@@ -283,7 +307,11 @@ export interface IBEP20 extends BaseContract {
 
     getOwner(overrides?: CallOverrides): Promise<BigNumber>;
 
+    maxSupply(overrides?: CallOverrides): Promise<BigNumber>;
+
     name(overrides?: CallOverrides): Promise<BigNumber>;
+
+    preMineSupply(overrides?: CallOverrides): Promise<BigNumber>;
 
     symbol(overrides?: CallOverrides): Promise<BigNumber>;
 
@@ -305,7 +333,7 @@ export interface IBEP20 extends BaseContract {
 
   populateTransaction: {
     allowance(
-      owner: string,
+      _owner: string,
       spender: string,
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
@@ -325,7 +353,11 @@ export interface IBEP20 extends BaseContract {
 
     getOwner(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
+    maxSupply(overrides?: CallOverrides): Promise<PopulatedTransaction>;
+
     name(overrides?: CallOverrides): Promise<PopulatedTransaction>;
+
+    preMineSupply(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
     symbol(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
