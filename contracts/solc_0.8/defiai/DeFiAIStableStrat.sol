@@ -475,7 +475,11 @@ contract DeFiAIStableStrat is Ownable, Pausable {
 
         farmInfo[activePid].accumulatedTokenPerShare += _earned * 1e12 / farmInfo[activePid].totalShare;
         
-        IUniswapV2Router01(farmInfo[_newPid].routerAddress).addLiquidity(
+        (
+            uint256 _amountToken,
+            uint256 _amountETH,
+            uint256 _liquidity
+        )= IUniswapV2Router01(farmInfo[_newPid].routerAddress).addLiquidity(
             busd,
             usdt,
             _busd,
@@ -484,6 +488,11 @@ contract DeFiAIStableStrat is Ownable, Pausable {
             0,
             address(this),
             block.timestamp
+        );
+
+        require(
+            _amountToken > 0 && _amountETH > 0 && _liquidity > 0,
+            "no liquidity added"
         );
 
         uint256 _newLp = IERC20(farmInfo[_newPid].lpAddress).balanceOf(
