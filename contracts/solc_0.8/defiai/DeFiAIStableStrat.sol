@@ -215,10 +215,10 @@ contract DeFiAIStableStrat is Ownable, Pausable {
     address public immutable swapRouterAddress;
 
     // Address of BUSD.
-    address public busd;
+    address public immutable busd;
 
     // Address of USDT.
-    address public usdt;
+    address public  immutable usdt;
 
     // Developer address.
     address public devAddress;
@@ -292,9 +292,9 @@ contract DeFiAIStableStrat is Ownable, Pausable {
         );
         swapRouterAddress = _swapRouterAddress;
         busd = _busd;
-        swapPid[busd] = busdPid;
+        swapPid[_busd] = busdPid;
         usdt = _usdt;
-        swapPid[usdt] = usdtPid;
+        swapPid[_usdt] = usdtPid;
         devAddress = _devAddress;
         defiaiFarmAddress = _defiaiFarmAddress;
         withdrawalMultiplier = _withdrawalMultiplier;
