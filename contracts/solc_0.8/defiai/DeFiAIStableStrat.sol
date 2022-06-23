@@ -239,7 +239,7 @@ contract DeFiAIStableStrat is Ownable, Pausable {
 
     mapping(address => int128) public swapPid;
 
-    mapping(address => User) public userInfo;
+    mapping(address => mapping(uint256 => User)) public userInfo;
 
     /* ========== MODIFIERS ========== */
 
@@ -368,16 +368,16 @@ contract DeFiAIStableStrat is Ownable, Pausable {
             address(this),
             _wantAmt
         );
-        userInfo[user].balance += _wantAmt;
+        userInfo[user][activePid].balance += _wantAmt;
 
         _convertWantToLp(_wantAddress, _wantAddress == busd ? usdt : busd);
         uint256 _earnedBeforeFarm = IERC20(farmInfo[activePid].earnedAddress).balanceOf(address(this));
         if (farmInfo[activePid].totalShare > 0) {
             uint256 poolShare = farmInfo[activePid].totalShare;
             _farm();
-            uint earn = _collect(_earnedBeforeFarm);
+            uint256 earn = _collect(_earnedBeforeFarm);
             farmInfo[activePid].accumulatedTokenPerShare += earn * 1e12 / poolShare;
-            userInfo[user].accumulatedClaimedToken = _wantAmt *  farmInfo[activePid].accumulatedTokenPerShare/ 1e12;
+            userInfo[user][activePid].accumulatedClaimedToken = _wantAmt *  farmInfo[activePid].accumulatedTokenPerShare/ 1e12;
         }
         farmInfo[activePid].totalShare += _wantAmt;
 
@@ -391,9 +391,10 @@ contract DeFiAIStableStrat is Ownable, Pausable {
     ) external virtual onlyFarms returns (uint256) {
         require(_wantAmt > 0, "DeFiAIMultiStrat::withdraw: Zero _wantAmt");
         require(
-            _wantAmt <= userInfo[user].balance,
+            _wantAmt <= userInfo[user][activePid].balance,
             "DeFiAIMultiStrat::withdraw: No Enough balance"
         );
+        uint256 poolShare = farmInfo[activePid].totalShare;
         uint256 _earnedBeforeFarm = IERC20(farmInfo[activePid].earnedAddress).balanceOf(address(this));
         _unfarm(_wantAmt);
         _convertLpToWant(_wantAddress, _wantAddress == busd ? usdt : busd);
@@ -404,22 +405,22 @@ contract DeFiAIStableStrat is Ownable, Pausable {
         uint earn = _collect(_earnedBeforeFarm);
         farmInfo[activePid].accumulatedTokenPerShare += earn * 1e12 / poolShare;
         
-        uint256 newUserTokenAmount = (farmInfo[activePid].accumulatedTokenPerShare * userInfo[user].balance) / 1e12;
-        uint256 promise_reward = newUserTokenAmount - userInfo[user].accumulatedClaimedToken;
+        uint256 newUserTokenAmount = (farmInfo[activePid].accumulatedTokenPerShare * userInfo[user][activePid].balance) / 1e12;
+        uint256 promise_reward = newUserTokenAmount - userInfo[user][activePid].accumulatedClaimedToken;
         if(promise_reward > 0){
             IERC20(farmInfo[activePid].earnedAddress).safeTransfer(user, promise_reward);
-            userInfo[user].accumulatedClaimedToken = newUserTokenAmount;
+            userInfo[user][activePid].accumulatedClaimedToken = newUserTokenAmount;
         }
         farmInfo[activePid].totalShare -= _wantAmt;
-        userInfo[user].balance -= _wantAmt;
+        userInfo[user][activePid].balance -= _wantAmt;
         
         return _wantAmt;
     }
 
-    function emergencyWithdraw() external onlyGovernance{
+    function emergencyWithdraw(address _wantAddress) external onlyGovernance{
         //to withdraw the residue after transaction
-        uint256 _leftover = IERC20(wantAddress).balanceOf(address(this));
-        IERC20(wantAddress).safeTransfer(devAddress,_leftover);
+        uint256 _leftover = IERC20(_wantAddress).balanceOf(address(this));
+        IERC20(_wantAddress).safeTransfer(devAddress,_leftover);
     }
 
     function changeActiveStrategy(uint8 _newPid) external onlyGovernance {
@@ -463,11 +464,17 @@ contract DeFiAIStableStrat is Ownable, Pausable {
             farmInfo[_newPid].routerAddress,
             _usdt
         );
+
+        
+        uint256 dev_earned = _earned * 30 /100;
         IERC20(farmInfo[activePid].earnedAddress).safeTransfer(
             devAddress,
-            _earned
+            dev_earned
         );
+        _earned -= dev_earned;
 
+        farmInfo[activePid].accumulatedTokenPerShare += _earned * 1e12 / farmInfo[activePid].totalShare;
+        
         IUniswapV2Router01(farmInfo[_newPid].routerAddress).addLiquidity(
             busd,
             usdt,
@@ -493,6 +500,30 @@ contract DeFiAIStableStrat is Ownable, Pausable {
 
         activePid = _newPid;
         emit ChangeActiveStrategy(_newPid);
+    }
+
+    function claimReward(uint8 _pid,address user) external {
+        require(_pid != activePid, "Only allow to claim inactive pool");
+        uint256 _earned = IERC20(farmInfo[_pid].earnedAddress).balanceOf(
+            address(this)
+        );
+
+        require(_earned >0 ,"No reward to be claim");
+        uint256 reward = (farmInfo[_pid].accumulatedTokenPerShare * userInfo[user][_pid].balance) / 1e12;
+        uint256 promise_reward = reward - userInfo[user][_pid].accumulatedClaimedToken;
+
+        require(promise_reward >0 ,"No reward to be claim");
+        promise_reward = promise_reward > _earned ? _earned : promise_reward;
+
+        // dev_reward = promise_reward * 30 /100 ;
+        // promise_reward -= dev_reward;
+
+        if(promise_reward > 0){
+            // IERC20(farmInfo[_pid].earnedAddress).safeTransfer(devAddress,dev_reward);
+            IERC20(farmInfo[_pid].earnedAddress).safeTransfer(user, promise_reward);
+            userInfo[user][_pid].accumulatedClaimedToken += promise_reward;
+        }
+
     }
 
     /* ========== RESTRICTED FUNCTIONS ========== */
@@ -549,7 +580,7 @@ contract DeFiAIStableStrat is Ownable, Pausable {
         IPancakeswapFarm(farmAddress).withdraw(pid, _lp);
     }
 
-    function _collect(uint256 _earnBeforeFarm) internal virtual {
+    function _collect(uint256 _earnBeforeFarm) internal virtual returns(uint256){
         uint256 _earned = IERC20(farmInfo[activePid].earnedAddress).balanceOf(
             address(this)
         );
@@ -655,6 +686,6 @@ contract DeFiAIStableStrat is Ownable, Pausable {
     /* ========== VIEWS ========== */
 
     function balances(address user) public view returns (uint256) {
-        return userInfo[user].balance;
+        return userInfo[user][activePid].balance;
     }
 }
