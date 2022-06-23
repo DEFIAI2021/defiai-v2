@@ -372,9 +372,9 @@ contract DeFiAIStableStrat is Ownable, Pausable {
 
         _convertWantToLp(_wantAddress, _wantAddress == busd ? usdt : busd);
         uint256 _earnedBeforeFarm = IERC20(farmInfo[activePid].earnedAddress).balanceOf(address(this));
+        uint256 poolShare = farmInfo[activePid].totalShare;
+        _farm();
         if (farmInfo[activePid].totalShare > 0) {
-            uint256 poolShare = farmInfo[activePid].totalShare;
-            _farm();
             uint256 earn = _collect(_earnedBeforeFarm);
             farmInfo[activePid].accumulatedTokenPerShare += earn * 1e12 / poolShare;
             userInfo[user][activePid].accumulatedClaimedToken = _wantAmt *  farmInfo[activePid].accumulatedTokenPerShare/ 1e12;
@@ -402,7 +402,7 @@ contract DeFiAIStableStrat is Ownable, Pausable {
         _wantAmt = _wantAmt > wantBalance ? wantBalance : _wantAmt;
 
         IERC20(_wantAddress).safeTransfer(defiaiFarmAddress, _wantAmt);
-        uint earn = _collect(_earnedBeforeFarm);
+        uint256 earn = _collect(_earnedBeforeFarm);
         farmInfo[activePid].accumulatedTokenPerShare += earn * 1e12 / poolShare;
         
         uint256 newUserTokenAmount = (farmInfo[activePid].accumulatedTokenPerShare * userInfo[user][activePid].balance) / 1e12;
