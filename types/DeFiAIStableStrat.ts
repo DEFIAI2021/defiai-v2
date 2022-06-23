@@ -26,9 +26,11 @@ export interface DeFiAIStableStratInterface extends utils.Interface {
     "balances(address)": FunctionFragment;
     "busd()": FunctionFragment;
     "changeActiveStrategy(uint8)": FunctionFragment;
+    "claimReward(uint8,address)": FunctionFragment;
     "defiaiFarmAddress()": FunctionFragment;
     "deposit(address,uint256,address)": FunctionFragment;
     "devAddress()": FunctionFragment;
+    "emergencyWithdraw(address)": FunctionFragment;
     "farmInfo(uint256)": FunctionFragment;
     "init(address[],uint256,address[],uint256,address[],uint256)": FunctionFragment;
     "isInit()": FunctionFragment;
@@ -43,7 +45,7 @@ export interface DeFiAIStableStratInterface extends utils.Interface {
     "transferOwnership(address)": FunctionFragment;
     "unpause()": FunctionFragment;
     "usdt()": FunctionFragment;
-    "userInfo(address)": FunctionFragment;
+    "userInfo(address,uint256)": FunctionFragment;
     "withdraw(address,uint256,address)": FunctionFragment;
     "withdrawalMultiplier()": FunctionFragment;
   };
@@ -61,6 +63,10 @@ export interface DeFiAIStableStratInterface extends utils.Interface {
     values: [BigNumberish]
   ): string;
   encodeFunctionData(
+    functionFragment: "claimReward",
+    values: [BigNumberish, string]
+  ): string;
+  encodeFunctionData(
     functionFragment: "defiaiFarmAddress",
     values?: undefined
   ): string;
@@ -71,6 +77,10 @@ export interface DeFiAIStableStratInterface extends utils.Interface {
   encodeFunctionData(
     functionFragment: "devAddress",
     values?: undefined
+  ): string;
+  encodeFunctionData(
+    functionFragment: "emergencyWithdraw",
+    values: [string]
   ): string;
   encodeFunctionData(
     functionFragment: "farmInfo",
@@ -114,7 +124,10 @@ export interface DeFiAIStableStratInterface extends utils.Interface {
   ): string;
   encodeFunctionData(functionFragment: "unpause", values?: undefined): string;
   encodeFunctionData(functionFragment: "usdt", values?: undefined): string;
-  encodeFunctionData(functionFragment: "userInfo", values: [string]): string;
+  encodeFunctionData(
+    functionFragment: "userInfo",
+    values: [string, BigNumberish]
+  ): string;
   encodeFunctionData(
     functionFragment: "withdraw",
     values: [string, BigNumberish, string]
@@ -137,11 +150,19 @@ export interface DeFiAIStableStratInterface extends utils.Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(
+    functionFragment: "claimReward",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
     functionFragment: "defiaiFarmAddress",
     data: BytesLike
   ): Result;
   decodeFunctionResult(functionFragment: "deposit", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "devAddress", data: BytesLike): Result;
+  decodeFunctionResult(
+    functionFragment: "emergencyWithdraw",
+    data: BytesLike
+  ): Result;
   decodeFunctionResult(functionFragment: "farmInfo", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "init", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "isInit", data: BytesLike): Result;
@@ -280,6 +301,12 @@ export interface DeFiAIStableStrat extends BaseContract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
+    claimReward(
+      _pid: BigNumberish,
+      user: string,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<ContractTransaction>;
+
     defiaiFarmAddress(overrides?: CallOverrides): Promise<[string]>;
 
     deposit(
@@ -290,6 +317,11 @@ export interface DeFiAIStableStrat extends BaseContract {
     ): Promise<ContractTransaction>;
 
     devAddress(overrides?: CallOverrides): Promise<[string]>;
+
+    emergencyWithdraw(
+      _wantAddress: string,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<ContractTransaction>;
 
     farmInfo(
       arg0: BigNumberish,
@@ -354,6 +386,7 @@ export interface DeFiAIStableStrat extends BaseContract {
 
     userInfo(
       arg0: string,
+      arg1: BigNumberish,
       overrides?: CallOverrides
     ): Promise<
       [BigNumber, BigNumber] & {
@@ -387,6 +420,12 @@ export interface DeFiAIStableStrat extends BaseContract {
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
+  claimReward(
+    _pid: BigNumberish,
+    user: string,
+    overrides?: Overrides & { from?: string | Promise<string> }
+  ): Promise<ContractTransaction>;
+
   defiaiFarmAddress(overrides?: CallOverrides): Promise<string>;
 
   deposit(
@@ -397,6 +436,11 @@ export interface DeFiAIStableStrat extends BaseContract {
   ): Promise<ContractTransaction>;
 
   devAddress(overrides?: CallOverrides): Promise<string>;
+
+  emergencyWithdraw(
+    _wantAddress: string,
+    overrides?: Overrides & { from?: string | Promise<string> }
+  ): Promise<ContractTransaction>;
 
   farmInfo(
     arg0: BigNumberish,
@@ -461,6 +505,7 @@ export interface DeFiAIStableStrat extends BaseContract {
 
   userInfo(
     arg0: string,
+    arg1: BigNumberish,
     overrides?: CallOverrides
   ): Promise<
     [BigNumber, BigNumber] & {
@@ -494,6 +539,12 @@ export interface DeFiAIStableStrat extends BaseContract {
       overrides?: CallOverrides
     ): Promise<void>;
 
+    claimReward(
+      _pid: BigNumberish,
+      user: string,
+      overrides?: CallOverrides
+    ): Promise<void>;
+
     defiaiFarmAddress(overrides?: CallOverrides): Promise<string>;
 
     deposit(
@@ -504,6 +555,11 @@ export interface DeFiAIStableStrat extends BaseContract {
     ): Promise<BigNumber>;
 
     devAddress(overrides?: CallOverrides): Promise<string>;
+
+    emergencyWithdraw(
+      _wantAddress: string,
+      overrides?: CallOverrides
+    ): Promise<void>;
 
     farmInfo(
       arg0: BigNumberish,
@@ -562,6 +618,7 @@ export interface DeFiAIStableStrat extends BaseContract {
 
     userInfo(
       arg0: string,
+      arg1: BigNumberish,
       overrides?: CallOverrides
     ): Promise<
       [BigNumber, BigNumber] & {
@@ -638,6 +695,12 @@ export interface DeFiAIStableStrat extends BaseContract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
+    claimReward(
+      _pid: BigNumberish,
+      user: string,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<BigNumber>;
+
     defiaiFarmAddress(overrides?: CallOverrides): Promise<BigNumber>;
 
     deposit(
@@ -648,6 +711,11 @@ export interface DeFiAIStableStrat extends BaseContract {
     ): Promise<BigNumber>;
 
     devAddress(overrides?: CallOverrides): Promise<BigNumber>;
+
+    emergencyWithdraw(
+      _wantAddress: string,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<BigNumber>;
 
     farmInfo(arg0: BigNumberish, overrides?: CallOverrides): Promise<BigNumber>;
 
@@ -697,7 +765,11 @@ export interface DeFiAIStableStrat extends BaseContract {
 
     usdt(overrides?: CallOverrides): Promise<BigNumber>;
 
-    userInfo(arg0: string, overrides?: CallOverrides): Promise<BigNumber>;
+    userInfo(
+      arg0: string,
+      arg1: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
 
     withdraw(
       user: string,
@@ -730,6 +802,12 @@ export interface DeFiAIStableStrat extends BaseContract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 
+    claimReward(
+      _pid: BigNumberish,
+      user: string,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<PopulatedTransaction>;
+
     defiaiFarmAddress(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
     deposit(
@@ -740,6 +818,11 @@ export interface DeFiAIStableStrat extends BaseContract {
     ): Promise<PopulatedTransaction>;
 
     devAddress(overrides?: CallOverrides): Promise<PopulatedTransaction>;
+
+    emergencyWithdraw(
+      _wantAddress: string,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<PopulatedTransaction>;
 
     farmInfo(
       arg0: BigNumberish,
@@ -797,6 +880,7 @@ export interface DeFiAIStableStrat extends BaseContract {
 
     userInfo(
       arg0: string,
+      arg1: BigNumberish,
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
 
