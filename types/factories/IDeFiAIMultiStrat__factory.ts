@@ -32,6 +32,24 @@ const _abi = [
   {
     inputs: [
       {
+        internalType: "uint8",
+        name: "_pid",
+        type: "uint8",
+      },
+      {
+        internalType: "address",
+        name: "user",
+        type: "address",
+      },
+    ],
+    name: "claimReward",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
         internalType: "address",
         name: "user",
         type: "address",
@@ -60,6 +78,11 @@ const _abi = [
   },
   {
     inputs: [
+      {
+        internalType: "uint8",
+        name: "_pid",
+        type: "uint8",
+      },
       {
         internalType: "address",
         name: "user",

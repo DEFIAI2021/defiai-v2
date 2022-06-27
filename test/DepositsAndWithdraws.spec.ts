@@ -11,6 +11,7 @@ import {
 } from "../types";
 import CONSTANTS from "../shared/constants";
 import { mineBlocks } from "../shared/util";
+import { parse } from "path";
 
 const provider = hre.network.provider;
 
@@ -32,25 +33,22 @@ describe("Farm Withdraw", async () => {
       const others = await getUnnamedAccounts();
       const alice = ethers.provider.getSigner(others[0]);
       const bob = ethers.provider.getSigner(others[1]);
+      const peter = ethers.provider.getSigner(others[2]);
       const dev = ethers.provider.getSigner("0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266");
-      
+
       await BUSD.connect(alice).devMint(parseEther("2500000"));
       await BUSD.connect(bob).devMint(parseEther("2500000"));
       await BUSD.connect(dev).devMint(parseEther("2500000"));
-      await BUSD.connect(alice).approve(
-        DEFIAIFarm.address,
-        CONSTANTS.MAX_VALUE
-      );
+      await BUSD.connect(peter).devMint(parseEther("2500000"));
+      await BUSD.connect(alice).approve(DEFIAIFarm.address,CONSTANTS.MAX_VALUE);
       await BUSD.connect(bob).approve(DEFIAIFarm.address, CONSTANTS.MAX_VALUE);
-      await BUSD.connect(dev).approve(
-        DEFIAIFarm.address,
-        CONSTANTS.MAX_VALUE
-      );
+      await BUSD.connect(dev).approve(DEFIAIFarm.address,CONSTANTS.MAX_VALUE);
       await DEFIAIFarm.connect(dev).initialize(BUSD.address, BUSDStrat.address);
 
       return {
         alice,
         bob,
+        peter,
         DEFIAIFarm,
         BUSDStrat,
         BUSD,
@@ -61,24 +59,129 @@ describe("Farm Withdraw", async () => {
     }
   );
   describe("Deposits", async () => {
-    it("should deposit into farm", async () => {
+    it("should approve contract before farm", async () => {
+      const { peter, DEFIAIFarm, BUSDStrat,BUSD } = await setup();
+
+      expect(await DEFIAIFarm.connect(peter).deposit(parseEther("10000"))).to.be.reverted;
+      
+      await BUSD.connect(peter).approve(DEFIAIFarm.address, CONSTANTS.MAX_VALUE);
+      await DEFIAIFarm.connect(peter).deposit(parseEther("10000"));
+      expect((await BUSDStrat.userInfo(peter._address, 0)).balance).to.be.eq(parseEther("10000"))
+      expect((await BUSDStrat.farmInfo(0)).totalShare).to.be.eq(parseEther("10000"));
+      expect((await BUSDStrat.farmInfo(1)).totalShare).to.be.eq(parseEther("0"));
+      expect((await BUSDStrat.farmInfo(2)).totalShare).to.be.eq(parseEther("0"));
+
+
+    });
+  });
+
+
+  describe("Deposits", async () => {
+    it("should not deposit zero or negative value into farm", async () => {
       const { alice, DEFIAIFarm, BUSDStrat } = await setup();
 
       await DEFIAIFarm.connect(alice).deposit(parseEther("10000"));
+      expect(await BUSDStrat.balances(alice._address)).to.eq(parseEther("10000"));
 
-      expect(await BUSDStrat.balances(alice._address)).to.eq(
-        parseEther("10000")
-      );
+      await expect(DEFIAIFarm.connect(alice).deposit(parseEther("0"))).to.be.reverted;
+      await expect(DEFIAIFarm.connect(alice).deposit(parseEther("-1"))).to.be.reverted;
+      await expect(DEFIAIFarm.connect(alice).deposit(CONSTANTS.MAX_VALUE)).to.be.reverted;
+      await expect(DEFIAIFarm.connect(alice).deposit(("0.1"))).to.be.reverted;
+      await expect(DEFIAIFarm.connect(alice).deposit(("-0.1"))).to.be.reverted;
+    });
+  });
+
+  describe("Deposits", async () => {
+    it("should deposit from farm, single user", async () => {
+      const { alice, DEFIAIFarm, BUSDStrat } = await setup();
+
+      await DEFIAIFarm.connect(alice).deposit(parseEther("10000"));
+      expect((await BUSDStrat.userInfo(alice._address, 0)).balance).to.be.eq(parseEther("10000"))
+      expect((await BUSDStrat.farmInfo(0)).totalShare).to.be.eq(parseEther("10000"));
+      expect((await BUSDStrat.farmInfo(1)).totalShare).to.be.eq(parseEther("0"));
+      expect((await BUSDStrat.farmInfo(2)).totalShare).to.be.eq(parseEther("0"));
+
+      await DEFIAIFarm.connect(alice).deposit(parseEther("2000"));
+      expect((await BUSDStrat.userInfo(alice._address, 0)).balance).to.be.eq(parseEther("12000"))
+      expect((await BUSDStrat.farmInfo(0)).totalShare).to.be.eq(parseEther("12000"));
+      expect((await BUSDStrat.farmInfo(1)).totalShare).to.be.eq(parseEther("0"));
+      expect((await BUSDStrat.farmInfo(2)).totalShare).to.be.eq(parseEther("0"));
+
+
     });
   });
 
   describe("Withdraws", async () => {
-    it("should withdraw from farm, single user", async () => {
-      const { alice, DEFIAIFarm, BUSD ,CAKE,dev } = await setup();
+    it("should withdraw from farm and get reward, single user", async () => {
+      const { alice, DEFIAIFarm, BUSD, CAKE, BUSDStrat } = await setup();
 
       await DEFIAIFarm.connect(alice).deposit(parseEther("10000"));
       const oldBalance = await BUSD.balanceOf(alice._address);
+      expect((await BUSDStrat.farmInfo(0)).totalShare).to.be.eq(parseEther("10000"));
+      expect((await BUSDStrat.farmInfo(1)).totalShare).to.be.eq(parseEther("0"));
+      expect((await BUSDStrat.farmInfo(2)).totalShare).to.be.eq(parseEther("0"));
+
+
+      await provider.request({
+        method: "evm_increaseTime",
+        params: [86400 * 3],
+      });
+
+      await mineBlocks(provider, 200);
+      await DEFIAIFarm.connect(alice).withdraw(parseEther("10000"), 0);
+      const newBalance = await BUSD.balanceOf(alice._address);
+      const reward = await CAKE.balanceOf(alice._address);
+      expect((await BUSDStrat.farmInfo(0)).totalShare).to.be.below(parseEther("10000"));
+      expect((await BUSDStrat.farmInfo(1)).totalShare).to.be.eq(parseEther("0"));
+      expect((await BUSDStrat.farmInfo(2)).totalShare).to.be.eq(parseEther("0"));
+      expect(newBalance.sub(oldBalance)).to.be.below(parseEther("10000"));
+      expect(newBalance.sub(oldBalance)).to.be.above(parseEther("9979"));
+      expect(reward).to.be.above(parseEther("1"));
+    });
+  });
+
+  describe("Deposits", async () => {
+    it("should deposit from farm, mutiple user", async () => {
+      const { alice, bob, DEFIAIFarm, BUSDStrat } = await setup();
+
+      await DEFIAIFarm.connect(alice).deposit(parseEther("10000"));
+      expect((await BUSDStrat.userInfo(alice._address, 0)).balance).to.be.eq(parseEther("10000"))
+      expect((await BUSDStrat.farmInfo(0)).totalShare).to.be.eq(parseEther("10000"));
+      expect((await BUSDStrat.farmInfo(1)).totalShare).to.be.eq(parseEther("0"));
+      expect((await BUSDStrat.farmInfo(2)).totalShare).to.be.eq(parseEther("0"));
+      await DEFIAIFarm.connect(bob).deposit(parseEther("10000"));
+      expect((await BUSDStrat.userInfo(bob._address, 0)).balance).to.be.eq(parseEther("10000"))
+      expect((await BUSDStrat.farmInfo(0)).totalShare).to.be.eq(parseEther("20000"));
+      expect((await BUSDStrat.farmInfo(1)).totalShare).to.be.eq(parseEther("0"));
+      expect((await BUSDStrat.farmInfo(2)).totalShare).to.be.eq(parseEther("0"));
+
+
+      await DEFIAIFarm.connect(bob).deposit(parseEther("10000"));
+      expect((await BUSDStrat.userInfo(bob._address, 0)).balance).to.be.eq(parseEther("20000"))
+      expect((await BUSDStrat.farmInfo(0)).totalShare).to.be.eq(parseEther("32000"));
+      expect((await BUSDStrat.farmInfo(1)).totalShare).to.be.eq(parseEther("0"));
+      expect((await BUSDStrat.farmInfo(2)).totalShare).to.be.eq(parseEther("0"));
+      await DEFIAIFarm.connect(alice).deposit(parseEther("2000"));
+      expect((await BUSDStrat.userInfo(alice._address, 0)).balance).to.be.eq(parseEther("12000"))
+      expect((await BUSDStrat.farmInfo(0)).totalShare).to.be.eq(parseEther("22000"));
+      expect((await BUSDStrat.farmInfo(1)).totalShare).to.be.eq(parseEther("0"));
+      expect((await BUSDStrat.farmInfo(2)).totalShare).to.be.eq(parseEther("0"));
      
+
+
+    });
+  });
+
+
+  describe("Withdraws", async () => {
+    it("should withdraw from farm,multiple user (Case1)", async () => {
+      const { alice, bob, DEFIAIFarm, BUSD, CAKE } = await setup();
+
+      await DEFIAIFarm.connect(alice).deposit(parseEther("10000"));
+      await DEFIAIFarm.connect(bob).deposit(parseEther("10000"));
+      const oldBalance_alice = await BUSD.balanceOf(alice._address);
+      const oldBalance_bob = await BUSD.balanceOf(alice._address);
+
       await provider.request({
         method: "evm_increaseTime",
         params: [86400 * 3],
@@ -86,14 +189,116 @@ describe("Farm Withdraw", async () => {
 
       await mineBlocks(provider, 100);
 
-      await DEFIAIFarm.connect(alice).withdraw(parseEther("10000"));
-      const newBalance = await BUSD.balanceOf(alice._address);
-      const reward = await CAKE.balanceOf(alice._address);
+      await DEFIAIFarm.connect(alice).withdraw(parseEther("10000"), 0);
+      await DEFIAIFarm.connect(bob).withdraw(parseEther("10000"), 0);
+      const newBalance_alice = await BUSD.balanceOf(alice._address);
+      const newBalance_bob = await BUSD.balanceOf(bob._address);
 
-      
-      expect(newBalance.sub(oldBalance)).to.be.below(parseEther("10000"));
-      expect(newBalance.sub(oldBalance)).to.be.above(parseEther("9979"));
-      expect(reward).to.be.above(parseEther("1"));
+      expect(newBalance_bob.sub(oldBalance_bob)).to.be.below(parseEther("10000"));
+      expect(newBalance_bob.sub(oldBalance_bob)).to.be.above(parseEther("9979"));
+      expect(newBalance_alice.sub(oldBalance_alice)).to.be.eq(parseEther("10000"));
+      expect(newBalance_alice.sub(oldBalance_alice)).to.be.above(parseEther("9979"));
+
+      const alice_reward = await CAKE.balanceOf(alice._address);
+      expect(alice_reward).to.be.above(parseEther("1"));
+      const bob_reward = await CAKE.balanceOf(bob._address);
+      expect(bob_reward).to.be.above(parseEther("1"));
+
     });
+
+    it("should withdraw from farm,multiple user (Case2)", async () => {
+      const { alice, bob, DEFIAIFarm, BUSD, CAKE } = await setup();
+
+      await DEFIAIFarm.connect(alice).deposit(parseEther("10000"));
+      await DEFIAIFarm.connect(bob).deposit(parseEther("10000"));
+      const oldBalance_alice = await BUSD.balanceOf(alice._address);
+      const oldBalance_bob = await BUSD.balanceOf(alice._address);
+
+      await provider.request({
+        method: "evm_increaseTime",
+        params: [86400 * 3],
+      });
+
+      await mineBlocks(provider, 100);
+
+      await DEFIAIFarm.connect(bob).withdraw(parseEther("10000"), 0);
+      await DEFIAIFarm.connect(alice).withdraw(parseEther("10000"), 0);
+      const newBalance_alice = await BUSD.balanceOf(alice._address);
+      const newBalance_bob = await BUSD.balanceOf(bob._address);
+
+      expect(newBalance_bob.sub(oldBalance_bob)).to.be.eq(parseEther("10000"));
+      expect(newBalance_bob.sub(oldBalance_bob)).to.be.above(parseEther("9979"));
+      expect(newBalance_alice.sub(oldBalance_alice)).to.be.below(parseEther("10000"));
+      expect(newBalance_alice.sub(oldBalance_alice)).to.be.above(parseEther("9979"));
+
+      const alice_reward = await CAKE.balanceOf(alice._address);
+      expect(alice_reward).to.be.above(parseEther("1"));
+      const bob_reward = await CAKE.balanceOf(bob._address);
+      expect(bob_reward).to.be.above(parseEther("1"));
+    });
+
+    it("should withdraw from farm,multiple user (Case3)", async () => {
+      const { alice, bob, DEFIAIFarm, BUSD, CAKE } = await setup();
+
+      await DEFIAIFarm.connect(bob).deposit(parseEther("10000"));
+      await DEFIAIFarm.connect(alice).deposit(parseEther("10000"));
+      const oldBalance_alice = await BUSD.balanceOf(alice._address);
+      const oldBalance_bob = await BUSD.balanceOf(alice._address);
+
+      await provider.request({
+        method: "evm_increaseTime",
+        params: [86400 * 3],
+      });
+
+      await mineBlocks(provider, 100);
+
+      await DEFIAIFarm.connect(alice).withdraw(parseEther("10000"), 0);
+      await DEFIAIFarm.connect(bob).withdraw(parseEther("10000"), 0);
+      const newBalance_alice = await BUSD.balanceOf(alice._address);
+      const newBalance_bob = await BUSD.balanceOf(bob._address);
+
+      expect(newBalance_bob.sub(oldBalance_bob)).to.be.below(parseEther("10000"));
+      expect(newBalance_bob.sub(oldBalance_bob)).to.be.above(parseEther("9979"));
+      expect(newBalance_alice.sub(oldBalance_alice)).to.be.eq(parseEther("10000"));
+      expect(newBalance_alice.sub(oldBalance_alice)).to.be.above(parseEther("9979"));
+
+      const alice_reward = await CAKE.balanceOf(alice._address);
+      expect(alice_reward).to.be.above(parseEther("1"));
+      const bob_reward = await CAKE.balanceOf(bob._address);
+      expect(bob_reward).to.be.above(parseEther("1"));
+    });
+
+     it("should withdraw from farm,multiple user (Case3)", async () => {
+      const { alice, bob, DEFIAIFarm, BUSD, CAKE } = await setup();
+
+      await DEFIAIFarm.connect(bob).deposit(parseEther("10000"));
+      await DEFIAIFarm.connect(alice).deposit(parseEther("10000"));
+      const oldBalance_alice = await BUSD.balanceOf(alice._address);
+      const oldBalance_bob = await BUSD.balanceOf(alice._address);
+
+      await provider.request({
+        method: "evm_increaseTime",
+        params: [86400 * 3],
+      });
+
+      await mineBlocks(provider, 100);
+
+      await DEFIAIFarm.connect(alice).withdraw(parseEther("10000"), 0);
+      await DEFIAIFarm.connect(bob).withdraw(parseEther("10000"), 0);
+      const newBalance_alice = await BUSD.balanceOf(alice._address);
+      const newBalance_bob = await BUSD.balanceOf(bob._address);
+
+      expect(newBalance_bob.sub(oldBalance_bob)).to.be.below(parseEther("10000"));
+      expect(newBalance_bob.sub(oldBalance_bob)).to.be.above(parseEther("9979"));
+      expect(newBalance_alice.sub(oldBalance_alice)).to.be.eq(parseEther("10000"));
+      expect(newBalance_alice.sub(oldBalance_alice)).to.be.above(parseEther("9979"));
+
+      const alice_reward = await CAKE.balanceOf(alice._address);
+      expect(alice_reward).to.be.above(parseEther("1"));
+      const bob_reward = await CAKE.balanceOf(bob._address);
+      expect(bob_reward).to.be.above(parseEther("1"));
+    });
+
   });
+
 });

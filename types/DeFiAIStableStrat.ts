@@ -46,7 +46,7 @@ export interface DeFiAIStableStratInterface extends utils.Interface {
     "unpause()": FunctionFragment;
     "usdt()": FunctionFragment;
     "userInfo(address,uint256)": FunctionFragment;
-    "withdraw(address,uint256,address)": FunctionFragment;
+    "withdraw(uint8,address,uint256,address)": FunctionFragment;
     "withdrawalMultiplier()": FunctionFragment;
   };
 
@@ -130,7 +130,7 @@ export interface DeFiAIStableStratInterface extends utils.Interface {
   ): string;
   encodeFunctionData(
     functionFragment: "withdraw",
-    values: [string, BigNumberish, string]
+    values: [BigNumberish, string, BigNumberish, string]
   ): string;
   encodeFunctionData(
     functionFragment: "withdrawalMultiplier",
@@ -396,6 +396,7 @@ export interface DeFiAIStableStrat extends BaseContract {
     >;
 
     withdraw(
+      _pid: BigNumberish,
       user: string,
       _wantAmt: BigNumberish,
       _wantAddress: string,
@@ -515,6 +516,7 @@ export interface DeFiAIStableStrat extends BaseContract {
   >;
 
   withdraw(
+    _pid: BigNumberish,
     user: string,
     _wantAmt: BigNumberish,
     _wantAddress: string,
@@ -628,6 +630,7 @@ export interface DeFiAIStableStrat extends BaseContract {
     >;
 
     withdraw(
+      _pid: BigNumberish,
       user: string,
       _wantAmt: BigNumberish,
       _wantAddress: string,
@@ -772,6 +775,7 @@ export interface DeFiAIStableStrat extends BaseContract {
     ): Promise<BigNumber>;
 
     withdraw(
+      _pid: BigNumberish,
       user: string,
       _wantAmt: BigNumberish,
       _wantAddress: string,
@@ -885,6 +889,7 @@ export interface DeFiAIStableStrat extends BaseContract {
     ): Promise<PopulatedTransaction>;
 
     withdraw(
+      _pid: BigNumberish,
       user: string,
       _wantAmt: BigNumberish,
       _wantAddress: string,

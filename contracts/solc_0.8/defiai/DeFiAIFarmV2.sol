@@ -96,10 +96,11 @@ contract DeFiAIFarmV2 is Ownable {
         emit Deposit(msg.sender, _wantAmt, address(poolInfo.want));
     }
 
-    function withdraw(uint256 _wantAmt) external {
+    function withdraw(uint256 _wantAmt,uint8 _pid) external {
         require(_wantAmt > 0, "amount is negative");
 
         _wantAmt = IDeFiAIMultiStrat(poolInfo.strat).withdraw(
+            _pid,
             msg.sender,
             _wantAmt,
             address(poolInfo.want)
@@ -120,5 +121,9 @@ contract DeFiAIFarmV2 is Ownable {
         );
         poolInfo = PoolInfo({want: _want, strat: _strat});
         isInit = true;
+    }
+
+    function claim(uint8 _pid) external {
+        IDeFiAIMultiStrat(poolInfo.strat).claimReward(_pid, msg.sender);
     }
 }

@@ -21,21 +21,30 @@ export interface IDeFiAIMultiStratInterface extends utils.Interface {
   contractName: "IDeFiAIMultiStrat";
   functions: {
     "balances(address)": FunctionFragment;
+    "claimReward(uint8,address)": FunctionFragment;
     "deposit(address,uint256,address)": FunctionFragment;
-    "withdraw(address,uint256,address)": FunctionFragment;
+    "withdraw(uint8,address,uint256,address)": FunctionFragment;
   };
 
   encodeFunctionData(functionFragment: "balances", values: [string]): string;
+  encodeFunctionData(
+    functionFragment: "claimReward",
+    values: [BigNumberish, string]
+  ): string;
   encodeFunctionData(
     functionFragment: "deposit",
     values: [string, BigNumberish, string]
   ): string;
   encodeFunctionData(
     functionFragment: "withdraw",
-    values: [string, BigNumberish, string]
+    values: [BigNumberish, string, BigNumberish, string]
   ): string;
 
   decodeFunctionResult(functionFragment: "balances", data: BytesLike): Result;
+  decodeFunctionResult(
+    functionFragment: "claimReward",
+    data: BytesLike
+  ): Result;
   decodeFunctionResult(functionFragment: "deposit", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "withdraw", data: BytesLike): Result;
 
@@ -72,6 +81,12 @@ export interface IDeFiAIMultiStrat extends BaseContract {
   functions: {
     balances(user: string, overrides?: CallOverrides): Promise<[BigNumber]>;
 
+    claimReward(
+      _pid: BigNumberish,
+      user: string,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<ContractTransaction>;
+
     deposit(
       user: string,
       _wantAmt: BigNumberish,
@@ -80,6 +95,7 @@ export interface IDeFiAIMultiStrat extends BaseContract {
     ): Promise<ContractTransaction>;
 
     withdraw(
+      _pid: BigNumberish,
       user: string,
       _wantAmt: BigNumberish,
       _wantAddress: string,
@@ -89,6 +105,12 @@ export interface IDeFiAIMultiStrat extends BaseContract {
 
   balances(user: string, overrides?: CallOverrides): Promise<BigNumber>;
 
+  claimReward(
+    _pid: BigNumberish,
+    user: string,
+    overrides?: Overrides & { from?: string | Promise<string> }
+  ): Promise<ContractTransaction>;
+
   deposit(
     user: string,
     _wantAmt: BigNumberish,
@@ -97,6 +119,7 @@ export interface IDeFiAIMultiStrat extends BaseContract {
   ): Promise<ContractTransaction>;
 
   withdraw(
+    _pid: BigNumberish,
     user: string,
     _wantAmt: BigNumberish,
     _wantAddress: string,
@@ -106,6 +129,12 @@ export interface IDeFiAIMultiStrat extends BaseContract {
   callStatic: {
     balances(user: string, overrides?: CallOverrides): Promise<BigNumber>;
 
+    claimReward(
+      _pid: BigNumberish,
+      user: string,
+      overrides?: CallOverrides
+    ): Promise<void>;
+
     deposit(
       user: string,
       _wantAmt: BigNumberish,
@@ -114,6 +143,7 @@ export interface IDeFiAIMultiStrat extends BaseContract {
     ): Promise<BigNumber>;
 
     withdraw(
+      _pid: BigNumberish,
       user: string,
       _wantAmt: BigNumberish,
       _wantAddress: string,
@@ -126,6 +156,12 @@ export interface IDeFiAIMultiStrat extends BaseContract {
   estimateGas: {
     balances(user: string, overrides?: CallOverrides): Promise<BigNumber>;
 
+    claimReward(
+      _pid: BigNumberish,
+      user: string,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<BigNumber>;
+
     deposit(
       user: string,
       _wantAmt: BigNumberish,
@@ -134,6 +170,7 @@ export interface IDeFiAIMultiStrat extends BaseContract {
     ): Promise<BigNumber>;
 
     withdraw(
+      _pid: BigNumberish,
       user: string,
       _wantAmt: BigNumberish,
       _wantAddress: string,
@@ -147,6 +184,12 @@ export interface IDeFiAIMultiStrat extends BaseContract {
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
 
+    claimReward(
+      _pid: BigNumberish,
+      user: string,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<PopulatedTransaction>;
+
     deposit(
       user: string,
       _wantAmt: BigNumberish,
@@ -155,6 +198,7 @@ export interface IDeFiAIMultiStrat extends BaseContract {
     ): Promise<PopulatedTransaction>;
 
     withdraw(
+      _pid: BigNumberish,
       user: string,
       _wantAmt: BigNumberish,
       _wantAddress: string,
