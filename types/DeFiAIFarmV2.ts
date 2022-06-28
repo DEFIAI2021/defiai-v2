@@ -33,7 +33,7 @@ export interface DeFiAIFarmV2Interface extends utils.Interface {
     "poolInfo()": FunctionFragment;
     "renounceOwnership()": FunctionFragment;
     "transferOwnership(address)": FunctionFragment;
-    "withdraw(uint256)": FunctionFragment;
+    "withdraw(uint256,uint8)": FunctionFragment;
   };
 
   encodeFunctionData(functionFragment: "FEE_DENOM", values?: undefined): string;
@@ -75,7 +75,7 @@ export interface DeFiAIFarmV2Interface extends utils.Interface {
   ): string;
   encodeFunctionData(
     functionFragment: "withdraw",
-    values: [BigNumberish]
+    values: [BigNumberish, BigNumberish]
   ): string;
 
   decodeFunctionResult(functionFragment: "FEE_DENOM", data: BytesLike): Result;
@@ -217,6 +217,7 @@ export interface DeFiAIFarmV2 extends BaseContract {
 
     withdraw(
       _wantAmt: BigNumberish,
+      _pid: BigNumberish,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
   };
@@ -266,6 +267,7 @@ export interface DeFiAIFarmV2 extends BaseContract {
 
   withdraw(
     _wantAmt: BigNumberish,
+    _pid: BigNumberish,
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
@@ -308,7 +310,11 @@ export interface DeFiAIFarmV2 extends BaseContract {
       overrides?: CallOverrides
     ): Promise<void>;
 
-    withdraw(_wantAmt: BigNumberish, overrides?: CallOverrides): Promise<void>;
+    withdraw(
+      _wantAmt: BigNumberish,
+      _pid: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<void>;
   };
 
   filters: {
@@ -391,6 +397,7 @@ export interface DeFiAIFarmV2 extends BaseContract {
 
     withdraw(
       _wantAmt: BigNumberish,
+      _pid: BigNumberish,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
   };
@@ -442,6 +449,7 @@ export interface DeFiAIFarmV2 extends BaseContract {
 
     withdraw(
       _wantAmt: BigNumberish,
+      _pid: BigNumberish,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
   };

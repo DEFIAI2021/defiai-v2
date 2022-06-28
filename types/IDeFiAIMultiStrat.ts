@@ -23,7 +23,7 @@ export interface IDeFiAIMultiStratInterface extends utils.Interface {
     "balances(address)": FunctionFragment;
     "claimReward(uint8,address)": FunctionFragment;
     "deposit(address,uint256,address)": FunctionFragment;
-    "withdraw(address,uint256,address)": FunctionFragment;
+    "withdraw(uint8,address,uint256,address)": FunctionFragment;
   };
 
   encodeFunctionData(functionFragment: "balances", values: [string]): string;
@@ -37,7 +37,7 @@ export interface IDeFiAIMultiStratInterface extends utils.Interface {
   ): string;
   encodeFunctionData(
     functionFragment: "withdraw",
-    values: [string, BigNumberish, string]
+    values: [BigNumberish, string, BigNumberish, string]
   ): string;
 
   decodeFunctionResult(functionFragment: "balances", data: BytesLike): Result;
@@ -95,6 +95,7 @@ export interface IDeFiAIMultiStrat extends BaseContract {
     ): Promise<ContractTransaction>;
 
     withdraw(
+      _pid: BigNumberish,
       user: string,
       _wantAmt: BigNumberish,
       _wantAddress: string,
@@ -118,6 +119,7 @@ export interface IDeFiAIMultiStrat extends BaseContract {
   ): Promise<ContractTransaction>;
 
   withdraw(
+    _pid: BigNumberish,
     user: string,
     _wantAmt: BigNumberish,
     _wantAddress: string,
@@ -141,6 +143,7 @@ export interface IDeFiAIMultiStrat extends BaseContract {
     ): Promise<BigNumber>;
 
     withdraw(
+      _pid: BigNumberish,
       user: string,
       _wantAmt: BigNumberish,
       _wantAddress: string,
@@ -167,6 +170,7 @@ export interface IDeFiAIMultiStrat extends BaseContract {
     ): Promise<BigNumber>;
 
     withdraw(
+      _pid: BigNumberish,
       user: string,
       _wantAmt: BigNumberish,
       _wantAddress: string,
@@ -194,6 +198,7 @@ export interface IDeFiAIMultiStrat extends BaseContract {
     ): Promise<PopulatedTransaction>;
 
     withdraw(
+      _pid: BigNumberish,
       user: string,
       _wantAmt: BigNumberish,
       _wantAddress: string,

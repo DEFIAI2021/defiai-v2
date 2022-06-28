@@ -21,8 +21,6 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
   const _usdt = usdt.address;
   const _devAddress = dev;
   const _defiaiFarmAddress = farm.address;
-  // @todo Change multiplier
-  const _withdrawalMultiplier = 10050;
   const _stratAddress = _stableStrat.address;
 
   const stratRes = await deploy("DeFiAIStableStrat", {
@@ -34,7 +32,6 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
       _usdt,
       "0x0dd58549666BbAFae53589878863fF85a28Fb0Ed",
       _defiaiFarmAddress,
-      _withdrawalMultiplier,
       _stratAddress,
       0,
       1

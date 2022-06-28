@@ -97,7 +97,6 @@ describe("Change active strategy", async () => {
         const { alice, DEFIAIFarm, BUSDStrat, BUSD ,CAKE,dev } = await setup();
   
         await DEFIAIFarm.connect(alice).deposit(parseEther("10000"));
-        const oldBalance = await BUSD.balanceOf(alice._address);
        
         await provider.request({
           method: "evm_increaseTime",
@@ -107,16 +106,13 @@ describe("Change active strategy", async () => {
         await mineBlocks(provider, 100);
   
         await BUSDStrat.connect(dev).changeActiveStrategy(1);
-        // await DEFIAIFarm.connect(alice).withdraw(parseEther("10000"));
-        //user cant withdraw
-        //shouldn't claim be in v2
-        await DEFIAIFarm.connect(alice).claim(0);
-        const newBalance = await BUSD.balanceOf(alice._address);
+        await DEFIAIFarm.connect(alice).withdraw(parseEther("10000"), 0);
+        const devbalance = await CAKE.balanceOf(dev._address);
         const reward = await CAKE.balanceOf(alice._address);
-        console.log("reward:", reward);
-        expect(reward).to.be.above(parseEther("1"));
+        expect(reward).to.be.above(parseEther("47"));
+        expect(devbalance).to.be.below(reward);
       });
-      it("single user claim wrong pid", async () => {
+      it("single user cannot withdraw wrong pid", async () => {
         const { alice, DEFIAIFarm, BUSDStrat,dev } = await setup();
   
         await DEFIAIFarm.connect(alice).deposit(parseEther("10000"));
@@ -129,13 +125,11 @@ describe("Change active strategy", async () => {
         await mineBlocks(provider, 100);
   
         await BUSDStrat.connect(dev).changeActiveStrategy(1);
-        // await DEFIAIFarm.connect(alice).withdraw(parseEther("10000"));
-        //user cant withdraw
-        //shouldn't claim be in v2
         
-        await expect(DEFIAIFarm.connect(alice).claim(1)).to.be.revertedWith('Only allow to claim inactive pool');
+        await expect(DEFIAIFarm.connect(alice).withdraw(parseEther("10000"), 1)).to.be.revertedWith('DeFiAIMultiStrat::withdraw: No Enough balance');
+        await expect(DEFIAIFarm.connect(alice).withdraw(parseEther("10000"), 4)).to.be.reverted;
       });
-      it("single user try to double claim", async () => {
+      it("single user cannot double withdraw", async () => {
         const { alice, DEFIAIFarm, BUSDStrat, BUSD ,CAKE,dev } = await setup();
   
         await DEFIAIFarm.connect(alice).deposit(parseEther("10000"));
@@ -148,28 +142,9 @@ describe("Change active strategy", async () => {
         await mineBlocks(provider, 100);
   
         await BUSDStrat.connect(dev).changeActiveStrategy(1);
-        console.log("first farm", await BUSDStrat.farmInfo(0));
-        console.log("second farm",await BUSDStrat.farmInfo(1));
-        console.log("third farm",await BUSDStrat.farmInfo(2));
-        await DEFIAIFarm.connect(alice).claim(0);
+        await DEFIAIFarm.connect(alice).withdraw(parseEther("10000"), 0);
         
-        await expect(DEFIAIFarm.connect(alice).claim(0)).to.be.revertedWith('No reward to be claim');
-      });
-      it("user claims pool with no reward", async () => {
-        const { alice, DEFIAIFarm, BUSDStrat, BUSD ,CAKE,dev } = await setup();
-  
-        await DEFIAIFarm.connect(alice).deposit(parseEther("10000"));
-       
-        await provider.request({
-          method: "evm_increaseTime",
-          params: [86400 * 3],
-        });
-  
-        await mineBlocks(provider, 100);
-
-        await expect(DEFIAIFarm.connect(alice).claim(1)).to.be.revertedWith('No reward to be claim');
-        await expect(DEFIAIFarm.connect(alice).claim(2)).to.be.revertedWith('No reward to be claim');
-        await expect(DEFIAIFarm.connect(alice).claim(4)).to.be.reverted;
+        await expect(DEFIAIFarm.connect(alice).withdraw(parseEther("10000"), 0)).to.be.revertedWith('DeFiAIMultiStrat::withdraw: No Enough balance');
       });
       it("dev cannot change to uninitialized pool", async () => {
         const { alice, DEFIAIFarm, BUSDStrat, BUSD ,CAKE,dev } = await setup();
@@ -187,6 +162,7 @@ describe("Change active strategy", async () => {
       });
       it("get mdxReward", async () => {
         const { alice, DEFIAIFarm, BUSDStrat, BUSD ,CAKE, BSW, MDX, dev } = await setup();
+        const oldDevmdx = await MDX.balanceOf(dev._address);
   
         await DEFIAIFarm.connect(alice).deposit(parseEther("10000"));
        
@@ -204,14 +180,28 @@ describe("Change active strategy", async () => {
         await mineBlocks(provider, 100);
         await BUSDStrat.connect(dev).changeActiveStrategy(0);
         await DEFIAIFarm.connect(alice).deposit(parseEther("10000"));
-        await DEFIAIFarm.connect(alice).claim(1);
 
+        await provider.request({
+          method: "evm_increaseTime",
+          params: [86400 * 3],
+        });
+        await mineBlocks(provider, 100);
+
+        await expect(DEFIAIFarm.connect(alice).withdraw(parseEther("10000"), 0));
+        await expect(DEFIAIFarm.connect(alice).withdraw(parseEther("10000"), 1));
+
+        const cakereward = await CAKE.balanceOf(alice._address);
+        const devCakeReward = await CAKE.balanceOf(dev._address);
+        expect(cakereward).to.be.above(parseEther("21"));
+        expect(devCakeReward).to.be.below(cakereward);
         const mdxreward = await MDX.balanceOf(alice._address);
-        console.log("MDXreward:", mdxreward);
-        expect(mdxreward).to.be.above(parseEther("1"));
+        const devMDXReward = await MDX.balanceOf(dev._address);
+        expect(mdxreward).to.be.above(parseEther("21"));
+        expect(devMDXReward.sub(oldDevmdx)).to.be.below(mdxreward);
       });
       it("get bswReward", async () => {
         const { alice, DEFIAIFarm, BUSDStrat, BUSD ,CAKE, BSW, MDX, dev } = await setup();
+        const oldDevBSW = await BSW.balanceOf(dev._address);
   
         await DEFIAIFarm.connect(alice).deposit(parseEther("10000"));
        
@@ -222,7 +212,6 @@ describe("Change active strategy", async () => {
   
         await mineBlocks(provider, 100);
         await BUSDStrat.connect(dev).changeActiveStrategy(2);
-        console.log ("farm total share",(await BUSDStrat.farmInfo(2)).totalShare);
         await DEFIAIFarm.connect(alice).deposit(parseEther("10000"));
         await provider.request({
           method: "evm_increaseTime",
@@ -230,10 +219,11 @@ describe("Change active strategy", async () => {
         });
         await mineBlocks(provider, 100);
         await BUSDStrat.connect(dev).changeActiveStrategy(1);
-        await DEFIAIFarm.connect(alice).claim(2);
+        await expect(DEFIAIFarm.connect(alice).withdraw(parseEther("10000"), 2));
         const bswreward = await BSW.balanceOf(alice._address);
-        console.log("BSWreward:", bswreward);
-        expect(bswreward).to.be.above(parseEther("1"));
+        const devBSWreward = await BSW.balanceOf(dev._address);
+        expect(bswreward).to.be.above(parseEther("47"));
+        expect(devBSWreward.sub(oldDevBSW)).to.be.below(bswreward);
       });
     });
     describe("Change active strategy once, for multiple users", async () => {
@@ -250,14 +240,15 @@ describe("Change active strategy", async () => {
   
         await mineBlocks(provider, 100);
         await BUSDStrat.connect(dev).changeActiveStrategy(1);
-        await DEFIAIFarm.connect(alice).claim(0);
-        await DEFIAIFarm.connect(bob).claim(0);
-        await expect(DEFIAIFarm.connect(bob).claim(0)).to.be.revertedWith('No reward to be claim');
-        await expect(DEFIAIFarm.connect(alice).claim(1)).to.be.revertedWith('Only allow to claim inactive pool');
+        await (DEFIAIFarm.connect(alice).withdraw(parseEther("10000"), 0));
+        await (DEFIAIFarm.connect(bob).withdraw(parseEther("10000"), 0));
+        await expect(DEFIAIFarm.connect(bob).withdraw(parseEther("10000"), 0)).to.be.revertedWith('DeFiAIMultiStrat::withdraw: No Enough balance');
         const alicecakereward = await CAKE.balanceOf(alice._address);
         const bobcakereward = await CAKE.balanceOf(bob._address);
-        expect (bobcakereward).to.be.above(1);
-        expect (alicecakereward).to.be.above(1);
+        const devcakereward = await CAKE.balanceOf(dev._address);
+        expect (bobcakereward).to.be.above(parseEther("47"));
+        expect (alicecakereward).to.be.above(parseEther("47"));
+        expect (devcakereward).to.be.below(bobcakereward.add(alicecakereward));
       });
     });
     describe("Change active strategy multiple times", async () => {
@@ -279,7 +270,6 @@ describe("Change active strategy", async () => {
           params: [86400 * 3],
         });
         await mineBlocks(provider, 100);
-        console.log("first change");
 
         await BUSDStrat.connect(dev).changeActiveStrategy(2);
         await DEFIAIFarm.connect(alice).deposit(parseEther("10000"));
@@ -288,19 +278,15 @@ describe("Change active strategy", async () => {
           params: [86400 * 3],
         });
         await mineBlocks(provider, 100);
-        console.log("second change");
 
         await BUSDStrat.connect(dev).changeActiveStrategy(0);
         await DEFIAIFarm.connect(alice).deposit(parseEther("10000"));
-        await DEFIAIFarm.connect(alice).claim(1);
+        await DEFIAIFarm.connect(alice).withdraw(parseEther("10000"), 1);
         const cakereward = await CAKE.balanceOf(alice._address);
         const mdxreward = await MDX.balanceOf(alice._address);
         const bswreward = await BSW.balanceOf(alice._address);
-        console.log("CAKEreward:", cakereward);
-        console.log("MDXreward:", mdxreward);
-        console.log("BSWreward:", bswreward);
         expect(cakereward).to.be.eq(parseEther("0"));
-        expect(mdxreward).to.be.above(parseEther("1"));
+        expect(mdxreward).to.be.above(parseEther("21"));
         expect(bswreward).to.be.eq(parseEther("0"));
 
         await provider.request({
@@ -308,20 +294,16 @@ describe("Change active strategy", async () => {
           params: [86400 * 3],
         });
         await mineBlocks(provider, 100);
-        console.log("third change");
 
         await BUSDStrat.connect(dev).changeActiveStrategy(1);
         await DEFIAIFarm.connect(alice).deposit(parseEther("10000"));
-        await DEFIAIFarm.connect(alice).claim(2);
-        await expect(DEFIAIFarm.connect(alice).claim(1)).to.be.revertedWith('Only allow to claim inactive pool');
-        await DEFIAIFarm.connect(alice).claim(0);
+        await DEFIAIFarm.connect(alice).withdraw(parseEther("10000"), 2);
+        await DEFIAIFarm.connect(alice).withdraw(parseEther("10000"), 0);
 
         const cakereward1 = await CAKE.balanceOf(alice._address);
         const bswreward1 = await BSW.balanceOf(alice._address);
-        console.log("CAKEreward:", cakereward1);
-        console.log("BSWreward:", bswreward1);
-        expect(cakereward1).to.be.above(parseEther("1"));
-        expect(bswreward1).to.be.above(parseEther("1"));
+        expect(cakereward1).to.be.above(parseEther("21"));
+        expect(bswreward1).to.be.above(parseEther("21"));
       });
       it("multiple strat change for multiple users", async () => {
         const { alice, bob, DEFIAIFarm, BUSDStrat, BUSD ,CAKE, BSW, MDX, dev } = await setup();
@@ -335,9 +317,7 @@ describe("Change active strategy", async () => {
         });
   
         await mineBlocks(provider, 100);
-        console.log("activePid:", await BUSDStrat.connect(alice).activePid());
         await BUSDStrat.connect(dev).changeActiveStrategy(1);
-        console.log("activePid:", await BUSDStrat.connect(alice).activePid());
         await DEFIAIFarm.connect(alice).deposit(parseEther("10000"));
         await DEFIAIFarm.connect(bob).deposit(parseEther("10000"));
         await provider.request({
@@ -345,11 +325,8 @@ describe("Change active strategy", async () => {
           params: [86400 * 3],
         });
         await mineBlocks(provider, 100);
-        console.log("first change");
 
-        console.log("activePid:", await BUSDStrat.connect(alice).activePid());
         await BUSDStrat.connect(dev).changeActiveStrategy(2);
-        console.log("activePid:", await BUSDStrat.connect(alice).activePid());
         await DEFIAIFarm.connect(alice).deposit(parseEther("10000"));
         await DEFIAIFarm.connect(bob).deposit(parseEther("10000"));
         await provider.request({
@@ -357,85 +334,49 @@ describe("Change active strategy", async () => {
           params: [86400 * 3],
         });
         await mineBlocks(provider, 100);
-        console.log("second change");
 
-        console.log("activePid:", await BUSDStrat.connect(alice).activePid());
         await BUSDStrat.connect(dev).changeActiveStrategy(0);
-        console.log("activePid:", await BUSDStrat.connect(alice).activePid());
         await DEFIAIFarm.connect(alice).deposit(parseEther("10000"));
         await DEFIAIFarm.connect(bob).deposit(parseEther("10000"));
-        console.log("reward for pool",await MDX.balanceOf(BUSD.address));
-        await DEFIAIFarm.connect(alice).claim(1);
+        await DEFIAIFarm.connect(alice).withdraw(parseEther("10000"), 1);
         const alicemdxreward = await MDX.balanceOf(alice._address);
-        console.log("reward for alice",alicemdxreward);
-        await DEFIAIFarm.connect(bob).claim(1);
-        // const aliceCakeReward = await CAKE.balanceOf(alice._address);
+        await DEFIAIFarm.connect(bob).withdraw(parseEther("10000"), 1);
+        const aliceCakeReward = await CAKE.balanceOf(alice._address);
         
-        // const alicebswreward = await BSW.balanceOf(alice._address);
-        // expect(aliceCakeReward).to.be.eq(parseEther("0"));
-        // expect(alicemdxreward).to.be.above(parseEther("1"));
-        // expect(alicebswreward).to.be.eq(parseEther("0"));
+        const alicebswreward = await BSW.balanceOf(alice._address);
+        expect(aliceCakeReward).to.be.eq(parseEther("0"));
+        expect(alicemdxreward).to.be.above(parseEther("21"));
+        expect(alicebswreward).to.be.eq(parseEther("0"));
 
-        // const bobCakeReward = await CAKE.balanceOf(alice._address);
-        // const bobmdxreward = await MDX.balanceOf(alice._address);
-        // const bobbswreward = await BSW.balanceOf(alice._address);
+        const bobCakeReward = await CAKE.balanceOf(alice._address);
+        const bobmdxreward = await MDX.balanceOf(alice._address);
+        const bobbswreward = await BSW.balanceOf(alice._address);
 
-        // expect(bobCakeReward).to.be.eq(parseEther("0"));
-        // expect(bobmdxreward).to.be.above(parseEther("1"));
-        // expect(bobbswreward).to.be.eq(parseEther("0"));
+        expect(bobCakeReward).to.be.eq(parseEther("0"));
+        expect(bobmdxreward).to.be.above(parseEther("21"));
+        expect(bobbswreward).to.be.eq(parseEther("0"));
 
-        // await provider.request({
-        //   method: "evm_increaseTime",
-        //   params: [86400 * 3],
-        // });
-        // await mineBlocks(provider, 100);
-        // console.log("third change");
-
-        // await BUSDStrat.connect(dev).changeActiveStrategy(1);
-        // await DEFIAIFarm.connect(alice).deposit(parseEther("10000"));
-        // await DEFIAIFarm.connect(bob).deposit(parseEther("10000"));
-        // await DEFIAIFarm.connect(alice).claim(2);
-        // await DEFIAIFarm.connect(bob).claim(2);
-        // await expect(DEFIAIFarm.connect(alice).claim(1)).to.be.revertedWith('Only allow to claim inactive pool');
-        // await expect(DEFIAIFarm.connect(bob).claim(1)).to.be.revertedWith('Only allow to claim inactive pool');
-        // await DEFIAIFarm.connect(alice).claim(0);
-        // await DEFIAIFarm.connect(bob).claim(0);
-
-        // const aliceCakeReward1 = await CAKE.balanceOf(alice._address);
-        // const alicebswreward1 = await BSW.balanceOf(alice._address);
-        // const bobCakeReward1 = await CAKE.balanceOf(bob._address);
-        // const bobbswreward1 = await BSW.balanceOf(bob._address);
-        // expect(aliceCakeReward1).to.be.above(parseEther("1"));
-        // expect(alicebswreward1).to.be.above(parseEther("1"));
-        // expect(bobCakeReward1).to.be.above(parseEther("1"));
-        // expect(bobbswreward1).to.be.above(parseEther("1"));
-      });
-    });
-    describe("Withdraw after strategy change", async () => {
-      it("single user withdraw", async () => {
-        const { alice, DEFIAIFarm, BUSDStrat, BUSD ,CAKE, BSW, MDX, dev, masterChef, bscPool } = await setup();
-  
-        await DEFIAIFarm.connect(alice).deposit(parseEther("10000"));
-       
         await provider.request({
           method: "evm_increaseTime",
           params: [86400 * 3],
         });
-  
         await mineBlocks(provider, 100);
+
         await BUSDStrat.connect(dev).changeActiveStrategy(1);
-        // console.log("totalshare of pool0", (await BUSDStrat.farmInfo(0)).totalShare);
-        // console.log("totalshare of pool1", (await BUSDStrat.farmInfo(1)).totalShare);
-        // console.log("totalshare of pool2", (await BUSDStrat.farmInfo(2)).totalShare);
-        // console.log('CAKEbalance', (await masterChef.userInfo(1, BUSDStrat.address)).amount);
-        // console.log('MDXbalance', (await bscPool.userInfo(0, BUSDStrat.address)).amount);
-        // console.log('BSWbalance', (await BSW.balanceOf(BUSDStrat.address)));
-        // console.log("alice balance0",(await BUSDStrat.connect(alice).userBalance(alice._address)));
-        // console.log("alice balance1",(await BUSDStrat.connect(alice).userBalance(alice._address)));
-        // console.log("alice balance2",(await BUSDStrat.connect(alice).userBalance(alice._address)));
-        // await DEFIAIFarm.connect(alice).withdraw(parseEther("10000"));
-        // await DEFIAIFarm.connect(alice).withdraw(parseEther("10000"));
-        
+
+        await DEFIAIFarm.connect(alice).withdraw(parseEther("10000"), 2);
+        await DEFIAIFarm.connect(bob).withdraw(parseEther("10000"), 2);
+        await DEFIAIFarm.connect(alice).withdraw(parseEther("10000"), 0);
+        await DEFIAIFarm.connect(bob).withdraw(parseEther("10000"), 0);
+
+        const aliceCakeReward1 = await CAKE.balanceOf(alice._address);
+        const alicebswreward1 = await BSW.balanceOf(alice._address);
+        const bobCakeReward1 = await CAKE.balanceOf(bob._address);
+        const bobbswreward1 = await BSW.balanceOf(bob._address);
+        expect(aliceCakeReward1).to.be.above(parseEther("47"));
+        expect(alicebswreward1).to.be.above(parseEther("47"));
+        expect(bobCakeReward1).to.be.above(parseEther("47"));
+        expect(bobbswreward1).to.be.above(parseEther("47"));
       });
     });
     

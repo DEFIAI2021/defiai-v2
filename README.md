@@ -141,3 +141,28 @@ npx hardhat test
 ```
 
 
+# Flow
+ 1. Normal Flow
+    - User deposits into farm
+    - Time passes
+    - User withdraws from farm and get their rewards
+
+    <br>
+
+ 2. Dev/Owner change strategy
+    - User deposits into farm
+    - Time passes
+    - Dev/Owner changes strategy
+    - User withdraws from farm and get their rewards
+    - User deposits into farm again, but this time it has a different strategy, earning different type of reward token
+    <br>
+# Requirements
+ - Users are able to deposit into farm
+ - Users are able to withdraw from the farm anytime, as long as it is not in the same block/next block with their deposit
+ - Users will get their rewards (CAKE/MDX/BSW) when they withdraw
+ - Developers are able to get 30% of the rewards earned by the user every time user withdraws
+ - Developers are able to change the active strategy
+ - Users have to withdraw their balance from the previous strategy and restake them into the new active strategy on their own
+ - Users are able to withdraw their balance from previous pools, even after the strategy has changed
+
+ 
