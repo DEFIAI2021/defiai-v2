@@ -218,7 +218,7 @@ contract DeFiAIStableStrat is Ownable, Pausable {
     address public immutable busd;
 
     // Address of USDT.
-    address public  immutable usdt;
+    address public immutable usdt;
 
     // Developer address.
     address public devAddress;
@@ -371,13 +371,18 @@ contract DeFiAIStableStrat is Ownable, Pausable {
         userInfo[user][activePid].balance += _wantAmt;
 
         _convertWantToLp(_wantAddress, _wantAddress == busd ? usdt : busd);
-        uint256 _earnedBeforeFarm = IERC20(farmInfo[activePid].earnedAddress).balanceOf(address(this));
+        uint256 _earnedBeforeFarm = IERC20(farmInfo[activePid].earnedAddress)
+            .balanceOf(address(this));
         uint256 poolShare = farmInfo[activePid].totalShare;
         _farm();
         if (farmInfo[activePid].totalShare > 0) {
             uint256 earn = _collect(_earnedBeforeFarm);
-            farmInfo[activePid].accumulatedTokenPerShare += earn * 1e12 / poolShare;
-            userInfo[user][activePid].accumulatedClaimedToken = _wantAmt *  farmInfo[activePid].accumulatedTokenPerShare/ 1e12;
+            farmInfo[activePid].accumulatedTokenPerShare +=
+                (earn * 1e12) /
+                poolShare;
+            userInfo[user][activePid].accumulatedClaimedToken =
+                (_wantAmt * farmInfo[activePid].accumulatedTokenPerShare) /
+                1e12;
         }
         farmInfo[activePid].totalShare += _wantAmt;
 
@@ -396,7 +401,8 @@ contract DeFiAIStableStrat is Ownable, Pausable {
             "DeFiAIMultiStrat::withdraw: No Enough balance"
         );
         uint256 poolShare = farmInfo[_pid].totalShare;
-        uint256 _earnedBeforeFarm = IERC20(farmInfo[_pid].earnedAddress).balanceOf(address(this));
+        uint256 _earnedBeforeFarm = IERC20(farmInfo[_pid].earnedAddress)
+            .balanceOf(address(this));
         _unfarm(_wantAmt);
         _convertLpToWant(_wantAddress, _wantAddress == busd ? usdt : busd);
         uint256 wantBalance = IERC20(_wantAddress).balanceOf(address(this));
@@ -404,23 +410,25 @@ contract DeFiAIStableStrat is Ownable, Pausable {
 
         IERC20(_wantAddress).safeTransfer(defiaiFarmAddress, _wantAmt);
         uint256 earn = _collect(_earnedBeforeFarm);
-        farmInfo[_pid].accumulatedTokenPerShare += earn * 1e12 / poolShare;
-        
-        uint256 newUserTokenAmount = (farmInfo[_pid].accumulatedTokenPerShare * userInfo[user][_pid].balance) / 1e12;
-        uint256 promise_reward = newUserTokenAmount - userInfo[user][_pid].accumulatedClaimedToken;
+        farmInfo[_pid].accumulatedTokenPerShare += (earn * 1e12) / poolShare;
+
+        uint256 newUserTokenAmount = (farmInfo[_pid].accumulatedTokenPerShare *
+            userInfo[user][_pid].balance) / 1e12;
+        uint256 promise_reward = newUserTokenAmount -
+            userInfo[user][_pid].accumulatedClaimedToken;
         IERC20(farmInfo[_pid].earnedAddress).safeTransfer(user, promise_reward);
         userInfo[user][_pid].accumulatedClaimedToken = newUserTokenAmount;
-        
+
         farmInfo[_pid].totalShare -= _wantAmt;
         userInfo[user][_pid].balance -= _wantAmt;
-        
+
         return _wantAmt;
     }
 
-    function emergencyWithdraw(address _wantAddress) external onlyGovernance{
+    function emergencyWithdraw(address _wantAddress) external onlyGovernance {
         //to withdraw the residue after transaction
         uint256 _leftover = IERC20(_wantAddress).balanceOf(address(this));
-        IERC20(_wantAddress).safeTransfer(devAddress,_leftover);
+        IERC20(_wantAddress).safeTransfer(devAddress, _leftover);
     }
 
     function changeActiveStrategy(uint8 _newPid) external onlyGovernance {
@@ -465,30 +473,31 @@ contract DeFiAIStableStrat is Ownable, Pausable {
             _usdt
         );
 
-        
-        uint256 dev_earned = _earned * 30 /100;
-        IERC20(farmInfo[activePid].earnedAddress).safeTransfer(
-            devAddress,
-            dev_earned
-        );
+        uint256 dev_earned = (_earned * 30) / 100;
+        // IERC20(farmInfo[activePid].earnedAddress).safeTransfer(
+        //     devAddress,
+        //     dev_earned
+        // );
         _earned -= dev_earned;
 
-        farmInfo[activePid].accumulatedTokenPerShare += _earned * 1e12 / farmInfo[activePid].totalShare;
-        
+        farmInfo[activePid].accumulatedTokenPerShare +=
+            (_earned * 1e12) /
+            farmInfo[activePid].totalShare;
+
         (
             uint256 _amountToken,
             uint256 _amountETH,
             uint256 _liquidity
-        )= IUniswapV2Router01(farmInfo[_newPid].routerAddress).addLiquidity(
-            busd,
-            usdt,
-            _busd,
-            _usdt,
-            0,
-            0,
-            address(this),
-            block.timestamp
-        );
+        ) = IUniswapV2Router01(farmInfo[_newPid].routerAddress).addLiquidity(
+                busd,
+                usdt,
+                _busd,
+                _usdt,
+                0,
+                0,
+                address(this),
+                block.timestamp
+            );
 
         require(
             _amountToken > 0 && _amountETH > 0 && _liquidity > 0,
@@ -511,28 +520,32 @@ contract DeFiAIStableStrat is Ownable, Pausable {
         emit ChangeActiveStrategy(_newPid);
     }
 
-    function claimReward(uint8 _pid,address user) external {
+    function claimReward(uint8 _pid, address user) external {
         require(_pid != activePid, "Only allow to claim inactive pool");
         uint256 _earned = IERC20(farmInfo[_pid].earnedAddress).balanceOf(
             address(this)
         );
 
-        require(_earned >0 ,"No reward to be claim");
-        uint256 reward = (farmInfo[_pid].accumulatedTokenPerShare * userInfo[user][_pid].balance) / 1e12;
-        uint256 promise_reward = reward - userInfo[user][_pid].accumulatedClaimedToken;
+        require(_earned > 0, "No reward to be claim");
+        uint256 reward = (farmInfo[_pid].accumulatedTokenPerShare *
+            userInfo[user][_pid].balance) / 1e12;
+        uint256 promise_reward = reward -
+            userInfo[user][_pid].accumulatedClaimedToken;
 
-        require(promise_reward >0 ,"No reward to be claim");
+        require(promise_reward > 0, "No reward to be claim");
         promise_reward = promise_reward > _earned ? _earned : promise_reward;
 
         // dev_reward = promise_reward * 30 /100 ;
         // promise_reward -= dev_reward;
 
-        if(promise_reward > 0){
+        if (promise_reward > 0) {
             // IERC20(farmInfo[_pid].earnedAddress).safeTransfer(devAddress,dev_reward);
-            IERC20(farmInfo[_pid].earnedAddress).safeTransfer(user, promise_reward);
+            IERC20(farmInfo[_pid].earnedAddress).safeTransfer(
+                user,
+                promise_reward
+            );
             userInfo[user][_pid].accumulatedClaimedToken += promise_reward;
         }
-
     }
 
     /* ========== RESTRICTED FUNCTIONS ========== */
@@ -589,18 +602,22 @@ contract DeFiAIStableStrat is Ownable, Pausable {
         IPancakeswapFarm(farmAddress).withdraw(pid, _lp);
     }
 
-    function _collect(uint256 _earnBeforeFarm) internal virtual returns(uint256){
+    function _collect(uint256 _earnBeforeFarm)
+        internal
+        virtual
+        returns (uint256)
+    {
         uint256 _earned = IERC20(farmInfo[activePid].earnedAddress).balanceOf(
             address(this)
         );
         uint256 _newEarn = _earned - _earnBeforeFarm;
-        uint256 _devEarn = _newEarn * 30 / 100;
+        uint256 _devEarn = (_newEarn * 30) / 100;
         _newEarn -= _devEarn;
         IERC20(farmInfo[activePid].earnedAddress).safeTransfer(
             devAddress,
             _devEarn
         );
-      
+
         return _newEarn;
     }
 

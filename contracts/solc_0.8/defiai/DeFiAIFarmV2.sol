@@ -73,7 +73,7 @@ contract DeFiAIFarmV2 is Ownable {
 
     /* ========== MUTATIVE FUNCTIONS ========== */
 
-     function deposit(uint256 _wantAmt) external {
+    function deposit(uint256 _wantAmt) external {
         require(_wantAmt > 0, "amount is negative");
         require(
             poolInfo.want.allowance(msg.sender, address(this)) >= _wantAmt,
@@ -96,7 +96,7 @@ contract DeFiAIFarmV2 is Ownable {
         emit Deposit(msg.sender, _wantAmt, address(poolInfo.want));
     }
 
-    function withdraw(uint256 _wantAmt,uint8 _pid) external {
+    function withdraw(uint256 _wantAmt, uint8 _pid) external {
         require(_wantAmt > 0, "amount is negative");
 
         _wantAmt = IDeFiAIMultiStrat(poolInfo.strat).withdraw(
@@ -108,7 +108,6 @@ contract DeFiAIFarmV2 is Ownable {
 
         poolInfo.want.safeTransfer(address(msg.sender), _wantAmt);
         emit Withdraw(msg.sender, _wantAmt, address(poolInfo.want));
-
     }
 
     /* ========== RESTRICTED FUNCTIONS ========== */
