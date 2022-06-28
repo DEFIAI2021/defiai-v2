@@ -200,12 +200,11 @@ contract DeFiAIStableStrat is Ownable, Pausable {
     struct User {
         uint256 balance;
         uint256 accumulatedClaimedToken;
+        uint256 lastDepositBlock;
     }
 
     /* ========== CONSTANTS ============= */
-
-    uint256 public constant DIVISOR = 10000;
-
+    
     // Maximum slippage factor.
     uint256 public constant SLIPPAGE_FACTOR_MAX = 10000;
 
@@ -225,9 +224,6 @@ contract DeFiAIStableStrat is Ownable, Pausable {
 
     // DeFiAI Farm address.
     address public immutable defiaiFarmAddress;
-
-    // Withdrawal multiplier to account for slippage
-    uint256 public immutable withdrawalMultiplier;
 
     address public immutable stratAddress;
 
@@ -267,7 +263,6 @@ contract DeFiAIStableStrat is Ownable, Pausable {
         address _usdt,
         address _devAddress,
         address _defiaiFarmAddress,
-        uint256 _withdrawalMultiplier,
         address _stratAddress,
         int128 busdPid,
         int128 usdtPid
@@ -297,7 +292,6 @@ contract DeFiAIStableStrat is Ownable, Pausable {
         swapPid[_usdt] = usdtPid;
         devAddress = _devAddress;
         defiaiFarmAddress = _defiaiFarmAddress;
-        withdrawalMultiplier = _withdrawalMultiplier;
         stratAddress = _stratAddress;
     }
 
@@ -361,7 +355,7 @@ contract DeFiAIStableStrat is Ownable, Pausable {
         address user,
         uint256 _wantAmt,
         address _wantAddress
-    ) external virtual onlyFarms whenNotPaused returns (uint256) {
+    ) external virtual onlyFarms returns (uint256) {
         require(_wantAmt > 0, "DeFiAIMultiStrat::: Zero deposit_wantAmt");
         IERC20(_wantAddress).safeTransferFrom(
             address(msg.sender),
@@ -369,6 +363,7 @@ contract DeFiAIStableStrat is Ownable, Pausable {
             _wantAmt
         );
         userInfo[user][activePid].balance += _wantAmt;
+        userInfo[user][activePid].lastDepositBlock = block.number;
 
         _convertWantToLp(_wantAddress, _wantAddress == busd ? usdt : busd);
         uint256 _earnedBeforeFarm = IERC20(farmInfo[activePid].earnedAddress)
@@ -395,13 +390,17 @@ contract DeFiAIStableStrat is Ownable, Pausable {
         uint256 _wantAmt,
         address _wantAddress
     ) external virtual onlyFarms returns (uint256) {
+        require(
+            block.number > userInfo[user][_pid].lastDepositBlock,
+            "DeFiAIMultiStrat::withdraw: cannot deposit and withdraw in same block"
+        );
         require(_wantAmt > 0, "DeFiAIMultiStrat::withdraw: Zero _wantAmt");
         require(
             _wantAmt <= userInfo[user][_pid].balance,
             "DeFiAIMultiStrat::withdraw: No Enough balance"
         );
         uint256 poolShare = farmInfo[_pid].totalShare;
-        uint256 _earnedBeforeFarm = IERC20(farmInfo[_pid].earnedAddress)
+        uint256 _earnedBeforeFarm = IERC20(farmInfo[activePid].earnedAddress)
             .balanceOf(address(this));
         _unfarm(_wantAmt);
         _convertLpToWant(_wantAddress, _wantAddress == busd ? usdt : busd);
@@ -416,6 +415,7 @@ contract DeFiAIStableStrat is Ownable, Pausable {
             userInfo[user][_pid].balance) / 1e12;
         uint256 promise_reward = newUserTokenAmount -
             userInfo[user][_pid].accumulatedClaimedToken;
+        promise_reward = promise_reward > earn ? earn : promise_reward;
         IERC20(farmInfo[_pid].earnedAddress).safeTransfer(user, promise_reward);
         userInfo[user][_pid].accumulatedClaimedToken = newUserTokenAmount;
 
@@ -474,10 +474,6 @@ contract DeFiAIStableStrat is Ownable, Pausable {
         );
 
         uint256 dev_earned = (_earned * 30) / 100;
-        // IERC20(farmInfo[activePid].earnedAddress).safeTransfer(
-        //     devAddress,
-        //     dev_earned
-        // );
         _earned -= dev_earned;
 
         farmInfo[activePid].accumulatedTokenPerShare +=
@@ -520,34 +516,6 @@ contract DeFiAIStableStrat is Ownable, Pausable {
         emit ChangeActiveStrategy(_newPid);
     }
 
-    function claimReward(uint8 _pid, address user) external {
-        require(_pid != activePid, "Only allow to claim inactive pool");
-        uint256 _earned = IERC20(farmInfo[_pid].earnedAddress).balanceOf(
-            address(this)
-        );
-
-        require(_earned > 0, "No reward to be claim");
-        uint256 reward = (farmInfo[_pid].accumulatedTokenPerShare *
-            userInfo[user][_pid].balance) / 1e12;
-        uint256 promise_reward = reward -
-            userInfo[user][_pid].accumulatedClaimedToken;
-
-        require(promise_reward > 0, "No reward to be claim");
-        promise_reward = promise_reward > _earned ? _earned : promise_reward;
-
-        // dev_reward = promise_reward * 30 /100 ;
-        // promise_reward -= dev_reward;
-
-        if (promise_reward > 0) {
-            // IERC20(farmInfo[_pid].earnedAddress).safeTransfer(devAddress,dev_reward);
-            IERC20(farmInfo[_pid].earnedAddress).safeTransfer(
-                user,
-                promise_reward
-            );
-            userInfo[user][_pid].accumulatedClaimedToken += promise_reward;
-        }
-    }
-
     /* ========== RESTRICTED FUNCTIONS ========== */
 
     function setDevAddress(address _devAddress)
@@ -561,14 +529,6 @@ contract DeFiAIStableStrat is Ownable, Pausable {
         );
         devAddress = _devAddress;
         emit SetDevAddress(_devAddress);
-    }
-
-    function pause() external onlyGovernance {
-        _pause();
-    }
-
-    function unpause() external onlyGovernance {
-        _unpause();
     }
 
     /* ========== PRIVATE FUNCTIONS ========== */
@@ -588,7 +548,7 @@ contract DeFiAIStableStrat is Ownable, Pausable {
     }
 
     function _unfarm(uint256 _wantAmt) internal virtual {
-        uint256 _lp = ((_wantAmt / 2) * withdrawalMultiplier) / DIVISOR;
+        uint256 _lp = _wantAmt / 2;
 
         address farmAddress = farmInfo[activePid].farmAddress;
         uint256 pid = farmInfo[activePid].pid;

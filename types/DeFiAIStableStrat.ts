@@ -20,13 +20,11 @@ import { TypedEventFilter, TypedEvent, TypedListener, OnEvent } from "./common";
 export interface DeFiAIStableStratInterface extends utils.Interface {
   contractName: "DeFiAIStableStrat";
   functions: {
-    "DIVISOR()": FunctionFragment;
     "SLIPPAGE_FACTOR_MAX()": FunctionFragment;
     "activePid()": FunctionFragment;
     "balances(address)": FunctionFragment;
     "busd()": FunctionFragment;
     "changeActiveStrategy(uint8)": FunctionFragment;
-    "claimReward(uint8,address)": FunctionFragment;
     "defiaiFarmAddress()": FunctionFragment;
     "deposit(address,uint256,address)": FunctionFragment;
     "devAddress()": FunctionFragment;
@@ -35,7 +33,6 @@ export interface DeFiAIStableStratInterface extends utils.Interface {
     "init(address[],uint256,address[],uint256,address[],uint256)": FunctionFragment;
     "isInit()": FunctionFragment;
     "owner()": FunctionFragment;
-    "pause()": FunctionFragment;
     "paused()": FunctionFragment;
     "renounceOwnership()": FunctionFragment;
     "setDevAddress(address)": FunctionFragment;
@@ -43,14 +40,11 @@ export interface DeFiAIStableStratInterface extends utils.Interface {
     "swapPid(address)": FunctionFragment;
     "swapRouterAddress()": FunctionFragment;
     "transferOwnership(address)": FunctionFragment;
-    "unpause()": FunctionFragment;
     "usdt()": FunctionFragment;
     "userInfo(address,uint256)": FunctionFragment;
     "withdraw(uint8,address,uint256,address)": FunctionFragment;
-    "withdrawalMultiplier()": FunctionFragment;
   };
 
-  encodeFunctionData(functionFragment: "DIVISOR", values?: undefined): string;
   encodeFunctionData(
     functionFragment: "SLIPPAGE_FACTOR_MAX",
     values?: undefined
@@ -61,10 +55,6 @@ export interface DeFiAIStableStratInterface extends utils.Interface {
   encodeFunctionData(
     functionFragment: "changeActiveStrategy",
     values: [BigNumberish]
-  ): string;
-  encodeFunctionData(
-    functionFragment: "claimReward",
-    values: [BigNumberish, string]
   ): string;
   encodeFunctionData(
     functionFragment: "defiaiFarmAddress",
@@ -99,7 +89,6 @@ export interface DeFiAIStableStratInterface extends utils.Interface {
   ): string;
   encodeFunctionData(functionFragment: "isInit", values?: undefined): string;
   encodeFunctionData(functionFragment: "owner", values?: undefined): string;
-  encodeFunctionData(functionFragment: "pause", values?: undefined): string;
   encodeFunctionData(functionFragment: "paused", values?: undefined): string;
   encodeFunctionData(
     functionFragment: "renounceOwnership",
@@ -122,7 +111,6 @@ export interface DeFiAIStableStratInterface extends utils.Interface {
     functionFragment: "transferOwnership",
     values: [string]
   ): string;
-  encodeFunctionData(functionFragment: "unpause", values?: undefined): string;
   encodeFunctionData(functionFragment: "usdt", values?: undefined): string;
   encodeFunctionData(
     functionFragment: "userInfo",
@@ -132,12 +120,7 @@ export interface DeFiAIStableStratInterface extends utils.Interface {
     functionFragment: "withdraw",
     values: [BigNumberish, string, BigNumberish, string]
   ): string;
-  encodeFunctionData(
-    functionFragment: "withdrawalMultiplier",
-    values?: undefined
-  ): string;
 
-  decodeFunctionResult(functionFragment: "DIVISOR", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "SLIPPAGE_FACTOR_MAX",
     data: BytesLike
@@ -147,10 +130,6 @@ export interface DeFiAIStableStratInterface extends utils.Interface {
   decodeFunctionResult(functionFragment: "busd", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "changeActiveStrategy",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "claimReward",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
@@ -167,7 +146,6 @@ export interface DeFiAIStableStratInterface extends utils.Interface {
   decodeFunctionResult(functionFragment: "init", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "isInit", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "owner", data: BytesLike): Result;
-  decodeFunctionResult(functionFragment: "pause", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "paused", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "renounceOwnership",
@@ -190,14 +168,9 @@ export interface DeFiAIStableStratInterface extends utils.Interface {
     functionFragment: "transferOwnership",
     data: BytesLike
   ): Result;
-  decodeFunctionResult(functionFragment: "unpause", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "usdt", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "userInfo", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "withdraw", data: BytesLike): Result;
-  decodeFunctionResult(
-    functionFragment: "withdrawalMultiplier",
-    data: BytesLike
-  ): Result;
 
   events: {
     "ChangeActiveStrategy(uint8)": EventFragment;
@@ -286,8 +259,6 @@ export interface DeFiAIStableStrat extends BaseContract {
   removeListener: OnEvent<this>;
 
   functions: {
-    DIVISOR(overrides?: CallOverrides): Promise<[BigNumber]>;
-
     SLIPPAGE_FACTOR_MAX(overrides?: CallOverrides): Promise<[BigNumber]>;
 
     activePid(overrides?: CallOverrides): Promise<[number]>;
@@ -298,12 +269,6 @@ export interface DeFiAIStableStrat extends BaseContract {
 
     changeActiveStrategy(
       _newPid: BigNumberish,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<ContractTransaction>;
-
-    claimReward(
-      _pid: BigNumberish,
-      user: string,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
@@ -352,10 +317,6 @@ export interface DeFiAIStableStrat extends BaseContract {
 
     owner(overrides?: CallOverrides): Promise<[string]>;
 
-    pause(
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<ContractTransaction>;
-
     paused(overrides?: CallOverrides): Promise<[boolean]>;
 
     renounceOwnership(
@@ -378,10 +339,6 @@ export interface DeFiAIStableStrat extends BaseContract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
-    unpause(
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<ContractTransaction>;
-
     usdt(overrides?: CallOverrides): Promise<[string]>;
 
     userInfo(
@@ -389,9 +346,10 @@ export interface DeFiAIStableStrat extends BaseContract {
       arg1: BigNumberish,
       overrides?: CallOverrides
     ): Promise<
-      [BigNumber, BigNumber] & {
+      [BigNumber, BigNumber, BigNumber] & {
         balance: BigNumber;
         accumulatedClaimedToken: BigNumber;
+        lastDepositBlock: BigNumber;
       }
     >;
 
@@ -402,11 +360,7 @@ export interface DeFiAIStableStrat extends BaseContract {
       _wantAddress: string,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
-
-    withdrawalMultiplier(overrides?: CallOverrides): Promise<[BigNumber]>;
   };
-
-  DIVISOR(overrides?: CallOverrides): Promise<BigNumber>;
 
   SLIPPAGE_FACTOR_MAX(overrides?: CallOverrides): Promise<BigNumber>;
 
@@ -418,12 +372,6 @@ export interface DeFiAIStableStrat extends BaseContract {
 
   changeActiveStrategy(
     _newPid: BigNumberish,
-    overrides?: Overrides & { from?: string | Promise<string> }
-  ): Promise<ContractTransaction>;
-
-  claimReward(
-    _pid: BigNumberish,
-    user: string,
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
@@ -472,10 +420,6 @@ export interface DeFiAIStableStrat extends BaseContract {
 
   owner(overrides?: CallOverrides): Promise<string>;
 
-  pause(
-    overrides?: Overrides & { from?: string | Promise<string> }
-  ): Promise<ContractTransaction>;
-
   paused(overrides?: CallOverrides): Promise<boolean>;
 
   renounceOwnership(
@@ -498,10 +442,6 @@ export interface DeFiAIStableStrat extends BaseContract {
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
-  unpause(
-    overrides?: Overrides & { from?: string | Promise<string> }
-  ): Promise<ContractTransaction>;
-
   usdt(overrides?: CallOverrides): Promise<string>;
 
   userInfo(
@@ -509,9 +449,10 @@ export interface DeFiAIStableStrat extends BaseContract {
     arg1: BigNumberish,
     overrides?: CallOverrides
   ): Promise<
-    [BigNumber, BigNumber] & {
+    [BigNumber, BigNumber, BigNumber] & {
       balance: BigNumber;
       accumulatedClaimedToken: BigNumber;
+      lastDepositBlock: BigNumber;
     }
   >;
 
@@ -523,11 +464,7 @@ export interface DeFiAIStableStrat extends BaseContract {
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
-  withdrawalMultiplier(overrides?: CallOverrides): Promise<BigNumber>;
-
   callStatic: {
-    DIVISOR(overrides?: CallOverrides): Promise<BigNumber>;
-
     SLIPPAGE_FACTOR_MAX(overrides?: CallOverrides): Promise<BigNumber>;
 
     activePid(overrides?: CallOverrides): Promise<number>;
@@ -538,12 +475,6 @@ export interface DeFiAIStableStrat extends BaseContract {
 
     changeActiveStrategy(
       _newPid: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<void>;
-
-    claimReward(
-      _pid: BigNumberish,
-      user: string,
       overrides?: CallOverrides
     ): Promise<void>;
 
@@ -592,8 +523,6 @@ export interface DeFiAIStableStrat extends BaseContract {
 
     owner(overrides?: CallOverrides): Promise<string>;
 
-    pause(overrides?: CallOverrides): Promise<void>;
-
     paused(overrides?: CallOverrides): Promise<boolean>;
 
     renounceOwnership(overrides?: CallOverrides): Promise<void>;
@@ -614,8 +543,6 @@ export interface DeFiAIStableStrat extends BaseContract {
       overrides?: CallOverrides
     ): Promise<void>;
 
-    unpause(overrides?: CallOverrides): Promise<void>;
-
     usdt(overrides?: CallOverrides): Promise<string>;
 
     userInfo(
@@ -623,9 +550,10 @@ export interface DeFiAIStableStrat extends BaseContract {
       arg1: BigNumberish,
       overrides?: CallOverrides
     ): Promise<
-      [BigNumber, BigNumber] & {
+      [BigNumber, BigNumber, BigNumber] & {
         balance: BigNumber;
         accumulatedClaimedToken: BigNumber;
+        lastDepositBlock: BigNumber;
       }
     >;
 
@@ -636,8 +564,6 @@ export interface DeFiAIStableStrat extends BaseContract {
       _wantAddress: string,
       overrides?: CallOverrides
     ): Promise<BigNumber>;
-
-    withdrawalMultiplier(overrides?: CallOverrides): Promise<BigNumber>;
   };
 
   filters: {
@@ -683,8 +609,6 @@ export interface DeFiAIStableStrat extends BaseContract {
   };
 
   estimateGas: {
-    DIVISOR(overrides?: CallOverrides): Promise<BigNumber>;
-
     SLIPPAGE_FACTOR_MAX(overrides?: CallOverrides): Promise<BigNumber>;
 
     activePid(overrides?: CallOverrides): Promise<BigNumber>;
@@ -695,12 +619,6 @@ export interface DeFiAIStableStrat extends BaseContract {
 
     changeActiveStrategy(
       _newPid: BigNumberish,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<BigNumber>;
-
-    claimReward(
-      _pid: BigNumberish,
-      user: string,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
@@ -736,10 +654,6 @@ export interface DeFiAIStableStrat extends BaseContract {
 
     owner(overrides?: CallOverrides): Promise<BigNumber>;
 
-    pause(
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<BigNumber>;
-
     paused(overrides?: CallOverrides): Promise<BigNumber>;
 
     renounceOwnership(
@@ -762,10 +676,6 @@ export interface DeFiAIStableStrat extends BaseContract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
-    unpause(
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<BigNumber>;
-
     usdt(overrides?: CallOverrides): Promise<BigNumber>;
 
     userInfo(
@@ -781,13 +691,9 @@ export interface DeFiAIStableStrat extends BaseContract {
       _wantAddress: string,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
-
-    withdrawalMultiplier(overrides?: CallOverrides): Promise<BigNumber>;
   };
 
   populateTransaction: {
-    DIVISOR(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
     SLIPPAGE_FACTOR_MAX(
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
@@ -803,12 +709,6 @@ export interface DeFiAIStableStrat extends BaseContract {
 
     changeActiveStrategy(
       _newPid: BigNumberish,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<PopulatedTransaction>;
-
-    claimReward(
-      _pid: BigNumberish,
-      user: string,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 
@@ -847,10 +747,6 @@ export interface DeFiAIStableStrat extends BaseContract {
 
     owner(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
-    pause(
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<PopulatedTransaction>;
-
     paused(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
     renounceOwnership(
@@ -876,10 +772,6 @@ export interface DeFiAIStableStrat extends BaseContract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 
-    unpause(
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<PopulatedTransaction>;
-
     usdt(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
     userInfo(
@@ -894,10 +786,6 @@ export interface DeFiAIStableStrat extends BaseContract {
       _wantAmt: BigNumberish,
       _wantAddress: string,
       overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<PopulatedTransaction>;
-
-    withdrawalMultiplier(
-      overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
   };
 }
