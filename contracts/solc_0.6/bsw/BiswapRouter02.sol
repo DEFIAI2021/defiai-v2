@@ -274,7 +274,7 @@ library BiswapLibrary {
                 hex'ff',
                 factory,
                 keccak256(abi.encodePacked(token0, token1)),
-                hex'51a6b306cafe4d576a962ae0ec780d547beee6010743eecb4bad4ac7ba900f84' // init code hash
+                hex'1d3a94c2f61f5919fbcdc8a3525a582d60be0163f5d44d6dba192182120a40f2' // init code hash
             ))));
     }
 

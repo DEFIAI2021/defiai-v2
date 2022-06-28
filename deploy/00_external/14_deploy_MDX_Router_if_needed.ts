@@ -12,9 +12,9 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
   const wbnb = await deployments.get("WBNB");
   const threshold = 3000;
 
-  // console.log(
-  //   `MDEX Factory INIT: ${await read("MdexFactory", "initCodeHash")}`
-  // );
+  console.log(
+    `MDEX Factory INIT: ${await read("MdexFactory", "initCodeHash")}`
+  );
 
   let pcsRouter = await deployments.getOrNull("MdexRouter");
   if (!pcsRouter) {

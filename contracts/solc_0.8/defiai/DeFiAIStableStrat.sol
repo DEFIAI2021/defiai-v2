@@ -372,9 +372,9 @@ contract DeFiAIStableStrat is Ownable, Pausable {
 
         _convertWantToLp(_wantAddress, _wantAddress == busd ? usdt : busd);
         uint256 _earnedBeforeFarm = IERC20(farmInfo[activePid].earnedAddress).balanceOf(address(this));
+        uint256 poolShare = farmInfo[activePid].totalShare;
+        _farm();
         if (farmInfo[activePid].totalShare > 0) {
-            uint256 poolShare = farmInfo[activePid].totalShare;
-            _farm();
             uint256 earn = _collect(_earnedBeforeFarm);
             farmInfo[activePid].accumulatedTokenPerShare += earn * 1e12 / poolShare;
             userInfo[user][activePid].accumulatedClaimedToken = _wantAmt *  farmInfo[activePid].accumulatedTokenPerShare/ 1e12;
@@ -385,34 +385,34 @@ contract DeFiAIStableStrat is Ownable, Pausable {
     }
 
     function withdraw(
+        uint8 _pid,
         address user,
         uint256 _wantAmt,
         address _wantAddress
     ) external virtual onlyFarms returns (uint256) {
         require(_wantAmt > 0, "DeFiAIMultiStrat::withdraw: Zero _wantAmt");
         require(
-            _wantAmt <= userInfo[user][activePid].balance,
+            _wantAmt <= userInfo[user][_pid].balance,
             "DeFiAIMultiStrat::withdraw: No Enough balance"
         );
-        uint256 poolShare = farmInfo[activePid].totalShare;
-        uint256 _earnedBeforeFarm = IERC20(farmInfo[activePid].earnedAddress).balanceOf(address(this));
+        uint256 poolShare = farmInfo[_pid].totalShare;
+        uint256 _earnedBeforeFarm = IERC20(farmInfo[_pid].earnedAddress).balanceOf(address(this));
         _unfarm(_wantAmt);
         _convertLpToWant(_wantAddress, _wantAddress == busd ? usdt : busd);
         uint256 wantBalance = IERC20(_wantAddress).balanceOf(address(this));
         _wantAmt = _wantAmt > wantBalance ? wantBalance : _wantAmt;
 
         IERC20(_wantAddress).safeTransfer(defiaiFarmAddress, _wantAmt);
-        uint earn = _collect(_earnedBeforeFarm);
-        farmInfo[activePid].accumulatedTokenPerShare += earn * 1e12 / poolShare;
+        uint256 earn = _collect(_earnedBeforeFarm);
+        farmInfo[_pid].accumulatedTokenPerShare += earn * 1e12 / poolShare;
         
-        uint256 newUserTokenAmount = (farmInfo[activePid].accumulatedTokenPerShare * userInfo[user][activePid].balance) / 1e12;
-        uint256 promise_reward = newUserTokenAmount - userInfo[user][activePid].accumulatedClaimedToken;
-        if(promise_reward > 0){
-            IERC20(farmInfo[activePid].earnedAddress).safeTransfer(user, promise_reward);
-            userInfo[user][activePid].accumulatedClaimedToken = newUserTokenAmount;
-        }
-        farmInfo[activePid].totalShare -= _wantAmt;
-        userInfo[user][activePid].balance -= _wantAmt;
+        uint256 newUserTokenAmount = (farmInfo[_pid].accumulatedTokenPerShare * userInfo[user][_pid].balance) / 1e12;
+        uint256 promise_reward = newUserTokenAmount - userInfo[user][_pid].accumulatedClaimedToken;
+        IERC20(farmInfo[_pid].earnedAddress).safeTransfer(user, promise_reward);
+        userInfo[user][_pid].accumulatedClaimedToken = newUserTokenAmount;
+        
+        farmInfo[_pid].totalShare -= _wantAmt;
+        userInfo[user][_pid].balance -= _wantAmt;
         
         return _wantAmt;
     }

@@ -18,7 +18,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
     const _refAddr = dev;
     const _safuaddr = dev;
     const _BSWPerBlock = parseEther("40");
-    const _startBlock = 700000;
+    const _startBlock = 0;
     const _stakingPercent = 100000;
     const _devPercent = 100000;
     const _refPercent = 100000;

@@ -4,7 +4,6 @@
 import {
   BaseContract,
   BigNumber,
-  BigNumberish,
   BytesLike,
   CallOverrides,
   ContractTransaction,
@@ -13,102 +12,31 @@ import {
   Signer,
   utils,
 } from "ethers";
-import { FunctionFragment, Result, EventFragment } from "@ethersproject/abi";
+import { FunctionFragment, Result } from "@ethersproject/abi";
 import { Listener, Provider } from "@ethersproject/providers";
 import { TypedEventFilter, TypedEvent, TypedListener, OnEvent } from "./common";
 
 export interface IBiswapFactoryInterface extends utils.Interface {
   contractName: "IBiswapFactory";
   functions: {
-    "INIT_CODE_HASH()": FunctionFragment;
-    "allPairs(uint256)": FunctionFragment;
-    "allPairsLength()": FunctionFragment;
     "createPair(address,address)": FunctionFragment;
-    "feeTo()": FunctionFragment;
-    "feeToSetter()": FunctionFragment;
     "getPair(address,address)": FunctionFragment;
-    "setDevFee(address,uint8)": FunctionFragment;
-    "setFeeTo(address)": FunctionFragment;
-    "setFeeToSetter(address)": FunctionFragment;
-    "setSwapFee(address,uint32)": FunctionFragment;
   };
 
   encodeFunctionData(
-    functionFragment: "INIT_CODE_HASH",
-    values?: undefined
-  ): string;
-  encodeFunctionData(
-    functionFragment: "allPairs",
-    values: [BigNumberish]
-  ): string;
-  encodeFunctionData(
-    functionFragment: "allPairsLength",
-    values?: undefined
-  ): string;
-  encodeFunctionData(
     functionFragment: "createPair",
     values: [string, string]
-  ): string;
-  encodeFunctionData(functionFragment: "feeTo", values?: undefined): string;
-  encodeFunctionData(
-    functionFragment: "feeToSetter",
-    values?: undefined
   ): string;
   encodeFunctionData(
     functionFragment: "getPair",
     values: [string, string]
   ): string;
-  encodeFunctionData(
-    functionFragment: "setDevFee",
-    values: [string, BigNumberish]
-  ): string;
-  encodeFunctionData(functionFragment: "setFeeTo", values: [string]): string;
-  encodeFunctionData(
-    functionFragment: "setFeeToSetter",
-    values: [string]
-  ): string;
-  encodeFunctionData(
-    functionFragment: "setSwapFee",
-    values: [string, BigNumberish]
-  ): string;
 
-  decodeFunctionResult(
-    functionFragment: "INIT_CODE_HASH",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(functionFragment: "allPairs", data: BytesLike): Result;
-  decodeFunctionResult(
-    functionFragment: "allPairsLength",
-    data: BytesLike
-  ): Result;
   decodeFunctionResult(functionFragment: "createPair", data: BytesLike): Result;
-  decodeFunctionResult(functionFragment: "feeTo", data: BytesLike): Result;
-  decodeFunctionResult(
-    functionFragment: "feeToSetter",
-    data: BytesLike
-  ): Result;
   decodeFunctionResult(functionFragment: "getPair", data: BytesLike): Result;
-  decodeFunctionResult(functionFragment: "setDevFee", data: BytesLike): Result;
-  decodeFunctionResult(functionFragment: "setFeeTo", data: BytesLike): Result;
-  decodeFunctionResult(
-    functionFragment: "setFeeToSetter",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(functionFragment: "setSwapFee", data: BytesLike): Result;
 
-  events: {
-    "PairCreated(address,address,address,uint256)": EventFragment;
-  };
-
-  getEvent(nameOrSignatureOrTopic: "PairCreated"): EventFragment;
+  events: {};
 }
-
-export type PairCreatedEvent = TypedEvent<
-  [string, string, string, BigNumber],
-  { token0: string; token1: string; pair: string; arg3: BigNumber }
->;
-
-export type PairCreatedEventFilter = TypedEventFilter<PairCreatedEvent>;
 
 export interface IBiswapFactory extends BaseContract {
   contractName: "IBiswapFactory";
@@ -138,59 +66,18 @@ export interface IBiswapFactory extends BaseContract {
   removeListener: OnEvent<this>;
 
   functions: {
-    INIT_CODE_HASH(overrides?: CallOverrides): Promise<[string]>;
-
-    allPairs(
-      arg0: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<[string] & { pair: string }>;
-
-    allPairsLength(overrides?: CallOverrides): Promise<[BigNumber]>;
-
     createPair(
       tokenA: string,
       tokenB: string,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
-    feeTo(overrides?: CallOverrides): Promise<[string]>;
-
-    feeToSetter(overrides?: CallOverrides): Promise<[string]>;
-
     getPair(
       tokenA: string,
       tokenB: string,
       overrides?: CallOverrides
     ): Promise<[string] & { pair: string }>;
-
-    setDevFee(
-      pair: string,
-      _devFee: BigNumberish,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<ContractTransaction>;
-
-    setFeeTo(
-      arg0: string,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<ContractTransaction>;
-
-    setFeeToSetter(
-      arg0: string,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<ContractTransaction>;
-
-    setSwapFee(
-      pair: string,
-      swapFee: BigNumberish,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<ContractTransaction>;
   };
-
-  INIT_CODE_HASH(overrides?: CallOverrides): Promise<string>;
-
-  allPairs(arg0: BigNumberish, overrides?: CallOverrides): Promise<string>;
-
-  allPairsLength(overrides?: CallOverrides): Promise<BigNumber>;
 
   createPair(
     tokenA: string,
@@ -198,185 +85,53 @@ export interface IBiswapFactory extends BaseContract {
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
-  feeTo(overrides?: CallOverrides): Promise<string>;
-
-  feeToSetter(overrides?: CallOverrides): Promise<string>;
-
   getPair(
     tokenA: string,
     tokenB: string,
     overrides?: CallOverrides
   ): Promise<string>;
 
-  setDevFee(
-    pair: string,
-    _devFee: BigNumberish,
-    overrides?: Overrides & { from?: string | Promise<string> }
-  ): Promise<ContractTransaction>;
-
-  setFeeTo(
-    arg0: string,
-    overrides?: Overrides & { from?: string | Promise<string> }
-  ): Promise<ContractTransaction>;
-
-  setFeeToSetter(
-    arg0: string,
-    overrides?: Overrides & { from?: string | Promise<string> }
-  ): Promise<ContractTransaction>;
-
-  setSwapFee(
-    pair: string,
-    swapFee: BigNumberish,
-    overrides?: Overrides & { from?: string | Promise<string> }
-  ): Promise<ContractTransaction>;
-
   callStatic: {
-    INIT_CODE_HASH(overrides?: CallOverrides): Promise<string>;
-
-    allPairs(arg0: BigNumberish, overrides?: CallOverrides): Promise<string>;
-
-    allPairsLength(overrides?: CallOverrides): Promise<BigNumber>;
-
     createPair(
       tokenA: string,
       tokenB: string,
       overrides?: CallOverrides
     ): Promise<string>;
 
-    feeTo(overrides?: CallOverrides): Promise<string>;
-
-    feeToSetter(overrides?: CallOverrides): Promise<string>;
-
     getPair(
       tokenA: string,
       tokenB: string,
       overrides?: CallOverrides
     ): Promise<string>;
-
-    setDevFee(
-      pair: string,
-      _devFee: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<void>;
-
-    setFeeTo(arg0: string, overrides?: CallOverrides): Promise<void>;
-
-    setFeeToSetter(arg0: string, overrides?: CallOverrides): Promise<void>;
-
-    setSwapFee(
-      pair: string,
-      swapFee: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<void>;
   };
 
-  filters: {
-    "PairCreated(address,address,address,uint256)"(
-      token0?: string | null,
-      token1?: string | null,
-      pair?: null,
-      arg3?: null
-    ): PairCreatedEventFilter;
-    PairCreated(
-      token0?: string | null,
-      token1?: string | null,
-      pair?: null,
-      arg3?: null
-    ): PairCreatedEventFilter;
-  };
+  filters: {};
 
   estimateGas: {
-    INIT_CODE_HASH(overrides?: CallOverrides): Promise<BigNumber>;
-
-    allPairs(arg0: BigNumberish, overrides?: CallOverrides): Promise<BigNumber>;
-
-    allPairsLength(overrides?: CallOverrides): Promise<BigNumber>;
-
     createPair(
       tokenA: string,
       tokenB: string,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
-    feeTo(overrides?: CallOverrides): Promise<BigNumber>;
-
-    feeToSetter(overrides?: CallOverrides): Promise<BigNumber>;
-
     getPair(
       tokenA: string,
       tokenB: string,
       overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
-    setDevFee(
-      pair: string,
-      _devFee: BigNumberish,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<BigNumber>;
-
-    setFeeTo(
-      arg0: string,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<BigNumber>;
-
-    setFeeToSetter(
-      arg0: string,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<BigNumber>;
-
-    setSwapFee(
-      pair: string,
-      swapFee: BigNumberish,
-      overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
   };
 
   populateTransaction: {
-    INIT_CODE_HASH(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    allPairs(
-      arg0: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    allPairsLength(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
     createPair(
       tokenA: string,
       tokenB: string,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 
-    feeTo(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    feeToSetter(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
     getPair(
       tokenA: string,
       tokenB: string,
       overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    setDevFee(
-      pair: string,
-      _devFee: BigNumberish,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<PopulatedTransaction>;
-
-    setFeeTo(
-      arg0: string,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<PopulatedTransaction>;
-
-    setFeeToSetter(
-      arg0: string,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<PopulatedTransaction>;
-
-    setSwapFee(
-      pair: string,
-      swapFee: BigNumberish,
-      overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
   };
 }

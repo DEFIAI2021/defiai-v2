@@ -11,9 +11,9 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
   const factory = await deployments.get("PancakeFactory");
   const wbnb = await deployments.get("WBNB");
 
-  // console.log(
-  //   `Cake Factory INIT: ${await read("PancakeFactory", "INIT_CODE_PAIR_HASH")}`
-  // );
+  console.log(
+    `Cake Factory INIT: ${await read("PancakeFactory", "INIT_CODE_PAIR_HASH")}`
+  );
 
   let pcsRouter = await deployments.getOrNull("PancakeRouter");
   if (!pcsRouter) {

@@ -65,6 +65,7 @@ describe("Farm Withdraw", async () => {
       const { alice, DEFIAIFarm, BUSDStrat } = await setup();
 
       await DEFIAIFarm.connect(alice).deposit(parseEther("10000"));
+      
 
       expect(await BUSDStrat.balances(alice._address)).to.eq(
         parseEther("10000")
@@ -74,7 +75,7 @@ describe("Farm Withdraw", async () => {
 
   describe("Withdraws", async () => {
     it("should withdraw from farm, single user", async () => {
-      const { alice, DEFIAIFarm, BUSD ,CAKE,dev } = await setup();
+      const { alice, DEFIAIFarm, BUSDStrat, BUSD ,CAKE,dev } = await setup();
 
       await DEFIAIFarm.connect(alice).deposit(parseEther("10000"));
       const oldBalance = await BUSD.balanceOf(alice._address);
@@ -90,9 +91,40 @@ describe("Farm Withdraw", async () => {
       const newBalance = await BUSD.balanceOf(alice._address);
       const reward = await CAKE.balanceOf(alice._address);
 
+      console.log("old balance:", oldBalance);
+      console.log("new balance:", newBalance);
+      console.log("difference:", newBalance.sub(oldBalance));
+      console.log("reward:", reward);
+      console.log("dev balance:", await BUSD.balanceOf(dev._address) );
       expect(newBalance.sub(oldBalance)).to.be.below(parseEther("10000"));
       expect(newBalance.sub(oldBalance)).to.be.above(parseEther("9979"));
       expect(reward).to.be.above(parseEther("1"));
     });
   });
+    describe("Change Active Strategy", async () => {
+      it("gov change active strat, single user claim success", async () => {
+        const { alice, DEFIAIFarm, BUSDStrat, BUSD ,CAKE,dev } = await setup();
+  
+        await DEFIAIFarm.connect(alice).deposit(parseEther("10000"));
+        const oldBalance = await BUSD.balanceOf(alice._address);
+       
+        await provider.request({
+          method: "evm_increaseTime",
+          params: [86400 * 3],
+        });
+  
+        await mineBlocks(provider, 100);
+  
+        await BUSDStrat.connect(dev).changeActiveStrategy((await BUSDStrat.farmInfo(0)).pid);
+        // await DEFIAIFarm.connect(alice).withdraw(parseEther("10000"));
+        //user cant withdraw
+        //shouldn't claim be in v2
+        await DEFIAIFarm.connect(alice).claim(0);
+        const newBalance = await BUSD.balanceOf(alice._address);
+        const reward = await CAKE.balanceOf(alice._address);
+        console.log("reward:", reward);
+        expect(reward).to.be.above(parseEther("1"));
+      });
+    });
+    
 });
