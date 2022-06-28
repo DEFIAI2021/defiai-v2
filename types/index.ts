@@ -62,6 +62,8 @@ export type { FakeToken } from "./FakeToken";
 export type { IDeFiAIMultiStrat } from "./IDeFiAIMultiStrat";
 export type { IDeFiAIStrat } from "./IDeFiAIStrat";
 export type { IPancakeswapFarm } from "./IPancakeswapFarm";
+export type { CurveLpToken } from "./CurveLpToken";
+export type { Stableswap } from "./Stableswap";
 
 export { Ownable__factory } from "./factories/Ownable__factory";
 export { Pausable__factory } from "./factories/Pausable__factory";
@@ -124,3 +126,5 @@ export { FakeToken__factory } from "./factories/FakeToken__factory";
 export { IDeFiAIMultiStrat__factory } from "./factories/IDeFiAIMultiStrat__factory";
 export { IDeFiAIStrat__factory } from "./factories/IDeFiAIStrat__factory";
 export { IPancakeswapFarm__factory } from "./factories/IPancakeswapFarm__factory";
+export { CurveLpToken__factory } from "./factories/CurveLpToken__factory";
+export { Stableswap__factory } from "./factories/Stableswap__factory";

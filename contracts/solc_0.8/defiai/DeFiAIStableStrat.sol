@@ -596,7 +596,6 @@ contract DeFiAIStableStrat is Ownable, Pausable {
         uint256 _newEarn = _earned - _earnBeforeFarm;
         uint256 _devEarn = _newEarn * 30 / 100;
         _newEarn -= _devEarn;
-      
         IERC20(farmInfo[activePid].earnedAddress).safeTransfer(
             devAddress,
             _devEarn

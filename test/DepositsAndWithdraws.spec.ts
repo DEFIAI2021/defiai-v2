@@ -45,6 +45,7 @@ describe("Farm Withdraw", async () => {
       await BUSD.connect(dev).approve(DEFIAIFarm.address,CONSTANTS.MAX_VALUE);
       await DEFIAIFarm.connect(dev).initialize(BUSD.address, BUSDStrat.address);
 
+
       return {
         alice,
         bob,
@@ -62,8 +63,9 @@ describe("Farm Withdraw", async () => {
     it("should approve contract before farm", async () => {
       const { peter, DEFIAIFarm, BUSDStrat,BUSD } = await setup();
 
-      expect(await DEFIAIFarm.connect(peter).deposit(parseEther("10000"))).to.be.reverted;
-      
+      await expect( DEFIAIFarm.connect(peter).deposit(parseEther("10000"))).to.be.reverted;
+      await BUSD.connect(peter).approve(DEFIAIFarm.address, CONSTANTS.MAX_VALUE);
+
       await BUSD.connect(peter).approve(DEFIAIFarm.address, CONSTANTS.MAX_VALUE);
       await DEFIAIFarm.connect(peter).deposit(parseEther("10000"));
       expect((await BUSDStrat.userInfo(peter._address, 0)).balance).to.be.eq(parseEther("10000"))
@@ -90,6 +92,39 @@ describe("Farm Withdraw", async () => {
       await expect(DEFIAIFarm.connect(alice).deposit(("-0.1"))).to.be.reverted;
     });
   });
+
+  describe("Withdraws", async () => {
+    it("should not withdraw invalid amount from farm", async () => {
+      const { alice, DEFIAIFarm, BUSDStrat, BUSD } = await setup();
+
+      await DEFIAIFarm.connect(alice).deposit(parseEther("2000"));
+      const oldBalance = await BUSD.balanceOf(alice._address);
+      expect((await BUSDStrat.userInfo(alice._address, 0)).balance).to.be.eq(parseEther("2000"))
+      expect((await BUSDStrat.farmInfo(0)).totalShare).to.be.eq(parseEther("2000"));
+      expect((await BUSDStrat.farmInfo(1)).totalShare).to.be.eq(parseEther("0"));
+      expect((await BUSDStrat.farmInfo(2)).totalShare).to.be.eq(parseEther("0"));
+
+      await provider.request({
+        method: "evm_increaseTime",
+        params: [86400 * 3],
+      });
+
+      await mineBlocks(provider, 10);
+
+      await expect(DEFIAIFarm.connect(alice).withdraw(parseEther("10000"), 0)).to.be.reverted;
+      await expect(DEFIAIFarm.connect(alice).withdraw(parseEther("-1"), 0)).to.be.reverted;
+
+      await DEFIAIFarm.connect(alice).withdraw(parseEther("2000"), 0)
+      const newBalance = await BUSD.balanceOf(alice._address);
+      expect(newBalance.sub(oldBalance)).to.be.below(parseEther("2000"));
+      expect(newBalance.sub(oldBalance)).to.be.above(parseEther("1991"));
+      expect((await BUSDStrat.farmInfo(0)).totalShare).to.be.below(parseEther("2000"));
+      expect((await BUSDStrat.farmInfo(1)).totalShare).to.be.eq(parseEther("0"));
+      expect((await BUSDStrat.farmInfo(2)).totalShare).to.be.eq(parseEther("0"));
+
+
+    });
+  })
 
   describe("Deposits", async () => {
     it("should deposit from farm, single user", async () => {
@@ -136,7 +171,7 @@ describe("Farm Withdraw", async () => {
       expect((await BUSDStrat.farmInfo(2)).totalShare).to.be.eq(parseEther("0"));
       expect(newBalance.sub(oldBalance)).to.be.below(parseEther("10000"));
       expect(newBalance.sub(oldBalance)).to.be.above(parseEther("9979"));
-      expect(reward).to.be.above(parseEther("1"));
+      expect(reward).to.be.above(parseEther("3507"));
     });
   });
 
@@ -158,12 +193,12 @@ describe("Farm Withdraw", async () => {
 
       await DEFIAIFarm.connect(bob).deposit(parseEther("10000"));
       expect((await BUSDStrat.userInfo(bob._address, 0)).balance).to.be.eq(parseEther("20000"))
-      expect((await BUSDStrat.farmInfo(0)).totalShare).to.be.eq(parseEther("32000"));
+      expect((await BUSDStrat.farmInfo(0)).totalShare).to.be.eq(parseEther("30000"));
       expect((await BUSDStrat.farmInfo(1)).totalShare).to.be.eq(parseEther("0"));
       expect((await BUSDStrat.farmInfo(2)).totalShare).to.be.eq(parseEther("0"));
       await DEFIAIFarm.connect(alice).deposit(parseEther("2000"));
       expect((await BUSDStrat.userInfo(alice._address, 0)).balance).to.be.eq(parseEther("12000"))
-      expect((await BUSDStrat.farmInfo(0)).totalShare).to.be.eq(parseEther("22000"));
+      expect((await BUSDStrat.farmInfo(0)).totalShare).to.be.eq(parseEther("32000"));
       expect((await BUSDStrat.farmInfo(1)).totalShare).to.be.eq(parseEther("0"));
       expect((await BUSDStrat.farmInfo(2)).totalShare).to.be.eq(parseEther("0"));
      
@@ -299,6 +334,37 @@ describe("Farm Withdraw", async () => {
       expect(bob_reward).to.be.above(parseEther("1"));
     });
 
+  });
+
+  describe("Withdraws", async () => {
+    it("dev should reward when withdraw", async () => {
+      const { alice, dev, DEFIAIFarm, BUSD, CAKE, BUSDStrat } = await setup();
+
+      await DEFIAIFarm.connect(alice).deposit(parseEther("10000"));
+      const oldBalance = await BUSD.balanceOf(alice._address);
+      expect((await BUSDStrat.farmInfo(0)).totalShare).to.be.eq(parseEther("10000"));
+      expect((await BUSDStrat.farmInfo(1)).totalShare).to.be.eq(parseEther("0"));
+      expect((await BUSDStrat.farmInfo(2)).totalShare).to.be.eq(parseEther("0"));
+
+      await provider.request({
+        method: "evm_increaseTime",
+        params: [86400 * 3],
+      });
+
+      await mineBlocks(provider, 200);
+      await DEFIAIFarm.connect(alice).withdraw(parseEther("10000"), 0);
+      const newBalance = await BUSD.balanceOf(alice._address);
+      const reward = await CAKE.balanceOf(alice._address);
+      const dev_reward = await CAKE.balanceOf("0x0dd58549666bbafae53589878863ff85a28fb0ed");
+      expect((await BUSDStrat.farmInfo(0)).totalShare).to.be.below(parseEther("10000"));
+      expect((await BUSDStrat.farmInfo(1)).totalShare).to.be.eq(parseEther("0"));
+      expect((await BUSDStrat.farmInfo(2)).totalShare).to.be.eq(parseEther("0"));
+      expect(newBalance.sub(oldBalance)).to.be.below(parseEther("10000"));
+      expect(newBalance.sub(oldBalance)).to.be.above(parseEther("9979"));
+      expect(reward).to.be.above(parseEther("3507"));
+      expect(dev_reward).to.be.below(reward);
+      expect(dev_reward).to.be.above(parseEther("1503"));
+    });
   });
 
 });

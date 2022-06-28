@@ -73,7 +73,7 @@ contract DeFiAIFarmV2 is Ownable {
 
     /* ========== MUTATIVE FUNCTIONS ========== */
 
-    function deposit(uint256 _wantAmt) external {
+     function deposit(uint256 _wantAmt) external {
         require(_wantAmt > 0, "amount is negative");
         require(
             poolInfo.want.allowance(msg.sender, address(this)) >= _wantAmt,
