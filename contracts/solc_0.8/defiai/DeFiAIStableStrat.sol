@@ -204,7 +204,7 @@ contract DeFiAIStableStrat is Ownable, Pausable {
     }
 
     /* ========== CONSTANTS ============= */
-    
+
     // Maximum slippage factor.
     uint256 public constant SLIPPAGE_FACTOR_MAX = 10000;
 
@@ -362,8 +362,6 @@ contract DeFiAIStableStrat is Ownable, Pausable {
             address(this),
             _wantAmt
         );
-        userInfo[user][activePid].balance += _wantAmt;
-        userInfo[user][activePid].lastDepositBlock = block.number;
 
         _convertWantToLp(_wantAddress, _wantAddress == busd ? usdt : busd);
         uint256 _earnedBeforeFarm = IERC20(farmInfo[activePid].earnedAddress)
@@ -372,14 +370,24 @@ contract DeFiAIStableStrat is Ownable, Pausable {
         _farm();
         if (farmInfo[activePid].totalShare > 0) {
             uint256 earn = _collect(_earnedBeforeFarm);
-            farmInfo[activePid].accumulatedTokenPerShare +=
+			 farmInfo[activePid].accumulatedTokenPerShare +=
                 (earn * 1e12) /
-                poolShare;
-            userInfo[user][activePid].accumulatedClaimedToken =
-                (_wantAmt * farmInfo[activePid].accumulatedTokenPerShare) /
+                poolShare ;
+            uint256 newUserTokenAmount = (farmInfo[activePid]
+                .accumulatedTokenPerShare * userInfo[user][activePid].balance) /
                 1e12;
+            uint256 promise_reward = newUserTokenAmount -
+                userInfo[user][activePid].accumulatedClaimedToken;
+            IERC20(farmInfo[activePid].earnedAddress).safeTransfer(
+                user,
+                promise_reward
+            );
+            userInfo[user][activePid]
+                .accumulatedClaimedToken = newUserTokenAmount;
         }
         farmInfo[activePid].totalShare += _wantAmt;
+        userInfo[user][activePid].balance += _wantAmt;
+        userInfo[user][activePid].lastDepositBlock = block.number;
 
         return _wantAmt;
     }
@@ -391,7 +399,7 @@ contract DeFiAIStableStrat is Ownable, Pausable {
         address _wantAddress
     ) external virtual onlyFarms returns (uint256) {
         require(
-            block.number > userInfo[user][_pid].lastDepositBlock,
+            block.number > userInfo[user][_pid].lastDepositBlock + 1,
             "DeFiAIMultiStrat::withdraw: cannot deposit and withdraw in same block"
         );
         require(_wantAmt > 0, "DeFiAIMultiStrat::withdraw: Zero _wantAmt");
