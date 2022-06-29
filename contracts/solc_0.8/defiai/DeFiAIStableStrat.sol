@@ -558,8 +558,9 @@ contract DeFiAIStableStrat is Ownable, Pausable {
     function _unfarm(uint256 _wantAmt) internal virtual {
         uint256 _lp = _wantAmt / 2;
 
-        address farmAddress = farmInfo[activePid].farmAddress;
-        uint256 pid = farmInfo[activePid].pid;
+		FarmInfo memory activeFarm = farmInfo[activePid];
+        address farmAddress = activeFarm.farmAddress;
+        uint256 pid = activeFarm.pid;
         (uint256 _shares, ) = IPancakeswapFarm(farmAddress).userInfo(
             pid,
             address(this)
@@ -575,13 +576,14 @@ contract DeFiAIStableStrat is Ownable, Pausable {
         virtual
         returns (uint256)
     {
-        uint256 _earned = IERC20(farmInfo[activePid].earnedAddress).balanceOf(
+		FarmInfo memory activeFarm = farmInfo[activePid];
+        uint256 _earned = IERC20(activeFarm.earnedAddress).balanceOf(
             address(this)
         );
         uint256 _newEarn = _earned - _earnBeforeFarm;
         uint256 _devEarn = (_newEarn * 30) / 100;
         _newEarn -= _devEarn;
-        IERC20(farmInfo[activePid].earnedAddress).safeTransfer(
+        IERC20(activeFarm.earnedAddress).safeTransfer(
             devAddress,
             _devEarn
         );
@@ -630,8 +632,9 @@ contract DeFiAIStableStrat is Ownable, Pausable {
     function _convertLpToWant(address _wantAddress, address _pairAddress)
         internal
     {
-        address lpAddress = farmInfo[activePid].lpAddress;
-        address routerAddress = farmInfo[activePid].routerAddress;
+		FarmInfo memory activeFarm = farmInfo[activePid];
+        address lpAddress = activeFarm.lpAddress;
+        address routerAddress = activeFarm.routerAddress;
         uint256 _lp = IERC20(lpAddress).balanceOf(address(this));
         IERC20(lpAddress).safeIncreaseAllowance(routerAddress, _lp);
         (uint256 _amountA, uint256 _amountB) = IUniswapV2Router01(routerAddress)
