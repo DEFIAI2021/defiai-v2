@@ -28,7 +28,7 @@ export interface DeFiAIStableStratInterface extends utils.Interface {
     "defiaiFarmAddress()": FunctionFragment;
     "deposit(address,uint256,address)": FunctionFragment;
     "devAddress()": FunctionFragment;
-    "emergencyWithdraw(address)": FunctionFragment;
+    "emergencyWithdraw(address,address)": FunctionFragment;
     "farmInfo(uint256)": FunctionFragment;
     "init(address[],uint256,address[],uint256,address[],uint256)": FunctionFragment;
     "isInit()": FunctionFragment;
@@ -70,7 +70,7 @@ export interface DeFiAIStableStratInterface extends utils.Interface {
   ): string;
   encodeFunctionData(
     functionFragment: "emergencyWithdraw",
-    values: [string]
+    values: [string, string]
   ): string;
   encodeFunctionData(
     functionFragment: "farmInfo",
@@ -285,6 +285,7 @@ export interface DeFiAIStableStrat extends BaseContract {
 
     emergencyWithdraw(
       _wantAddress: string,
+      _pairAddress: string,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
@@ -388,6 +389,7 @@ export interface DeFiAIStableStrat extends BaseContract {
 
   emergencyWithdraw(
     _wantAddress: string,
+    _pairAddress: string,
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
@@ -491,6 +493,7 @@ export interface DeFiAIStableStrat extends BaseContract {
 
     emergencyWithdraw(
       _wantAddress: string,
+      _pairAddress: string,
       overrides?: CallOverrides
     ): Promise<void>;
 
@@ -635,6 +638,7 @@ export interface DeFiAIStableStrat extends BaseContract {
 
     emergencyWithdraw(
       _wantAddress: string,
+      _pairAddress: string,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
@@ -725,6 +729,7 @@ export interface DeFiAIStableStrat extends BaseContract {
 
     emergencyWithdraw(
       _wantAddress: string,
+      _pairAddress: string,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 

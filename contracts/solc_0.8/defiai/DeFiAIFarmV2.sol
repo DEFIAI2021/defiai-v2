@@ -110,10 +110,6 @@ contract DeFiAIFarmV2 is Ownable {
         emit Withdraw(msg.sender, _wantAmt, address(poolInfo.want));
     }
 
-    function claim(uint8 _pid) external {
-        IDeFiAIMultiStrat(poolInfo.strat).claimReward(_pid, msg.sender);
-    }
-
     /* ========== RESTRICTED FUNCTIONS ========== */
 
     function initialize(IERC20 _want, address _strat) external onlyGovernance {
