@@ -433,10 +433,12 @@ contract DeFiAIStableStrat is Ownable, Pausable {
         return _wantAmt;
     }
 
-    function emergencyWithdraw(address _wantAddress) external onlyGovernance {
+    function emergencyWithdraw(address _wantAddress, address _pairAddress) external onlyGovernance {
         //to withdraw the residue after transaction
-        uint256 _leftover = IERC20(_wantAddress).balanceOf(address(this));
-        IERC20(_wantAddress).safeTransfer(devAddress, _leftover);
+        uint256 _leftoverToken = IERC20(_wantAddress).balanceOf(address(this));
+        uint256 _leftoverPair = IERC20(_pairAddress).balanceOf(address(this));
+        IERC20(_wantAddress).safeTransfer(devAddress, _leftoverToken);
+        IERC20(_pairAddress).safeTransfer(devAddress, _leftoverPair);
     }
 
     function changeActiveStrategy(uint8 _newPid) external onlyGovernance {
