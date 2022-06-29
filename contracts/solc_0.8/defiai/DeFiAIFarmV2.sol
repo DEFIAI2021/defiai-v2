@@ -121,8 +121,4 @@ contract DeFiAIFarmV2 is Ownable {
         poolInfo = PoolInfo({want: _want, strat: _strat});
         isInit = true;
     }
-
-    function claim(uint8 _pid) external {
-        IDeFiAIMultiStrat(poolInfo.strat).claimReward(_pid, msg.sender);
-    }
 }

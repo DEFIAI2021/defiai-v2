@@ -35,14 +35,17 @@ describe("Farm Withdraw", async () => {
 			const bob = ethers.provider.getSigner(others[1]);
 			const peter = ethers.provider.getSigner(others[2]);
 			const dev = ethers.provider.getSigner("0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266");
+			const newdev = ethers.provider.getSigner(others[3]);
 
 			await BUSD.connect(alice).devMint(parseEther("2500000"));
 			await BUSD.connect(bob).devMint(parseEther("2500000"));
 			await BUSD.connect(dev).devMint(parseEther("2500000"));
 			await BUSD.connect(peter).devMint(parseEther("2500000"));
+			await BUSD.connect(newdev).devMint(parseEther("2500000"));
 			await BUSD.connect(alice).approve(DEFIAIFarm.address, CONSTANTS.MAX_VALUE);
 			await BUSD.connect(bob).approve(DEFIAIFarm.address, CONSTANTS.MAX_VALUE);
 			await BUSD.connect(dev).approve(DEFIAIFarm.address, CONSTANTS.MAX_VALUE);
+			await BUSD.connect(newdev).approve(DEFIAIFarm.address, CONSTANTS.MAX_VALUE);
 			await DEFIAIFarm.connect(dev).initialize(BUSD.address, BUSDStrat.address);
 
 
@@ -56,6 +59,7 @@ describe("Farm Withdraw", async () => {
 				USDT,
 				CAKE,
 				dev,
+				newdev
 			};
 		}
 	);
@@ -379,7 +383,7 @@ describe("Farm Withdraw", async () => {
 	});
 
 	describe("Deposits", async () => {
-		it("should get reward for previois deposit", async () => {
+		it("should get reward for previous deposit", async () => {
 			const { alice, DEFIAIFarm, CAKE, BUSDStrat } = await setup();
 
 			await DEFIAIFarm.connect(alice).deposit(parseEther("10000"));
@@ -407,7 +411,55 @@ describe("Farm Withdraw", async () => {
 		});
 	});
 
-	
+	describe("Change of dev", async () => {
+		it("only dev can emergency withdraw", async () => {
+			const { alice, DEFIAIFarm, BUSDStrat, dev, BUSD, USDT } = await setup();
+			await DEFIAIFarm.connect(alice).deposit(parseEther("10000"));
+
+			await expect(BUSDStrat.connect(alice).emergencyWithdraw(BUSD.address, USDT.address)).to.be.revertedWith('Not gov');
+			await BUSDStrat.connect(dev).emergencyWithdraw(BUSD.address, USDT.address);
+		});
+		it("only governance can change dev", async () => {
+			const { alice, BUSDStrat, dev, newdev } = await setup();
+
+			await expect(BUSDStrat.connect(alice).setDevAddress(newdev._address)).to.be.revertedWith('Not gov');
+			await BUSDStrat.connect(dev).setDevAddress(newdev._address);
+			expect(await BUSDStrat.devAddress()).to.be.eq(newdev._address);
+		});
+		it("new dev should get reward", async () => {
+			const { alice, DEFIAIFarm, CAKE, BUSDStrat, dev, newdev } = await setup();
+
+			await DEFIAIFarm.connect(alice).deposit(parseEther("10000"));
+			expect((await BUSDStrat.farmInfo(0)).totalShare).to.be.eq(parseEther("10000"));
+			expect((await BUSDStrat.farmInfo(1)).totalShare).to.be.eq(parseEther("0"));
+			expect((await BUSDStrat.farmInfo(2)).totalShare).to.be.eq(parseEther("0"));
+
+			expect(await CAKE.balanceOf(dev._address)).to.be.eq(parseEther("0"));
+			expect(await CAKE.balanceOf(newdev._address)).to.be.eq(parseEther("0"));
+
+			await provider.request({
+				method: "evm_increaseTime",
+				params: [86400 * 3],
+			});
+
+			await mineBlocks(provider, 200);
+
+			await BUSDStrat.connect(dev).setDevAddress(newdev._address);
+
+			await DEFIAIFarm.connect(alice).deposit(parseEther("10000"));
+			expect((await BUSDStrat.farmInfo(0)).totalShare).to.be.eq(parseEther("20000"));
+			expect((await BUSDStrat.farmInfo(1)).totalShare).to.be.eq(parseEther("0"));
+			expect((await BUSDStrat.farmInfo(2)).totalShare).to.be.eq(parseEther("0"));
+
+			const reward = await CAKE.balanceOf(alice._address);
+			const dev_reward = await CAKE.balanceOf(dev._address);
+			const new_dev_reward = await CAKE.balanceOf(newdev._address);
+			expect(reward).to.be.above(parseEther("3507"));
+			expect(dev_reward).to.be.eq(0);
+			expect(new_dev_reward).to.be.below(reward);
+			expect(new_dev_reward).to.be.above(parseEther("1503"));
+		});
+	});
 
 
 });
