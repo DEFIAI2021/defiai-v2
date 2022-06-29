@@ -59,7 +59,7 @@ describe("Farm Withdraw", async () => {
 				USDT,
 				CAKE,
 				dev,
-        newdev
+        		newdev
 			};
 		}
 	);
@@ -462,6 +462,5 @@ describe("Farm Withdraw", async () => {
 			expect(new_dev_reward).to.be.above(parseEther("1503"));
 		});
 	});
-
 
 });
