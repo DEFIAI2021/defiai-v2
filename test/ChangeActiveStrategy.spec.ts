@@ -88,11 +88,6 @@ describe("Change active strategy", async () => {
 
 			await expect(BUSDStrat.connect(dev).changeActiveStrategy(0)).to.be.revertedWith('newPid is the same as activePid');
 		});
-		it("pcs balance zero", async () => {
-			const { BUSDStrat, dev } = await setup();
-
-			await expect(BUSDStrat.connect(dev).changeActiveStrategy(1)).to.be.revertedWith('Balance == 0');
-		});
 		it("single user claim success", async () => {
 			const { alice, DEFIAIFarm, BUSDStrat, CAKE, dev } = await setup();
 
@@ -240,8 +235,8 @@ describe("Change active strategy", async () => {
 			const alicecakereward = await CAKE.balanceOf(alice._address);
 			const bobcakereward = await CAKE.balanceOf(bob._address);
 			const devcakereward = await CAKE.balanceOf(dev._address);
-			expect(bobcakereward).to.be.above(parseEther("47"));
-			expect(alicecakereward).to.be.above(parseEther("47"));
+			expect(bobcakereward).to.be.above(parseEther("21"));
+			expect(alicecakereward).to.be.above(parseEther("21"));
 			expect(devcakereward).to.be.below(bobcakereward.add(alicecakereward));
 		});
 	});
@@ -368,10 +363,10 @@ describe("Change active strategy", async () => {
 			const alicebswreward1 = await BSW.balanceOf(alice._address);
 			const bobCakeReward1 = await CAKE.balanceOf(bob._address);
 			const bobbswreward1 = await BSW.balanceOf(bob._address);
-			expect(aliceCakeReward1).to.be.above(parseEther("47"));
-			expect(alicebswreward1).to.be.above(parseEther("47"));
-			expect(bobCakeReward1).to.be.above(parseEther("47"));
-			expect(bobbswreward1).to.be.above(parseEther("47"));
+			expect(aliceCakeReward1).to.be.above(parseEther("1"));
+			expect(alicebswreward1).to.be.above(parseEther("1"));
+			expect(bobCakeReward1).to.be.above(parseEther("1"));
+			expect(bobbswreward1).to.be.above(parseEther("1"));
 		});
 	});
 

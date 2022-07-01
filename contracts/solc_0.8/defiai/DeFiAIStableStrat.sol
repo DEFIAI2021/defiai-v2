@@ -369,7 +369,7 @@ contract DeFiAIStableStrat is Ownable, Pausable {
         uint256 poolShare = farmInfo[activePid].totalShare;
         _farm();
         if (farmInfo[activePid].totalShare > 0) {
-            uint256 earn = _collect(_earnedBeforeFarm);
+            uint256 earn = _collect(_earnedBeforeFarm, activePid);
 			 farmInfo[activePid].accumulatedTokenPerShare +=
                 (earn * 1e12) /
                 poolShare ;
@@ -408,17 +408,15 @@ contract DeFiAIStableStrat is Ownable, Pausable {
             "DeFiAIMultiStrat::withdraw: No Enough balance"
         );
         uint256 poolShare = farmInfo[_pid].totalShare;
-        uint256 _earnedBeforeFarm = IERC20(farmInfo[activePid].earnedAddress)
+        uint256 _earnedBeforeFarm = IERC20(farmInfo[_pid].earnedAddress)
             .balanceOf(address(this));
-        _unfarm(_wantAmt);
-        _convertLpToWant(_wantAddress, _wantAddress == busd ? usdt : busd);
+        _unfarm(_wantAmt,_pid);
+        _convertLpToWant(_wantAddress, _wantAddress == busd ? usdt : busd, _pid);
         uint256 wantBalance = IERC20(_wantAddress).balanceOf(address(this));
         _wantAmt = _wantAmt > wantBalance ? wantBalance : _wantAmt;
-
         IERC20(_wantAddress).safeTransfer(defiaiFarmAddress, _wantAmt);
-        uint256 earn = _collect(_earnedBeforeFarm);
+        uint256 earn = _collect(_earnedBeforeFarm, _pid);
         farmInfo[_pid].accumulatedTokenPerShare += (earn * 1e12) / poolShare;
-
         uint256 newUserTokenAmount = (farmInfo[_pid].accumulatedTokenPerShare *
             userInfo[user][_pid].balance) / 1e12;
         uint256 promise_reward = newUserTokenAmount -
@@ -443,85 +441,7 @@ contract DeFiAIStableStrat is Ownable, Pausable {
 
     function changeActiveStrategy(uint8 _newPid) external onlyGovernance {
         require(_newPid != activePid, "newPid is the same as activePid");
-        (uint256 _pcsBalance, ) = IPancakeswapFarm(
-            farmInfo[activePid].farmAddress
-        ).userInfo(farmInfo[activePid].pid, address(this));
-        require(_pcsBalance > 0, "Balance == 0");
-        IPancakeswapFarm(farmInfo[activePid].farmAddress).withdraw(
-            farmInfo[activePid].pid,
-            _pcsBalance
-        );
-        IERC20(farmInfo[activePid].lpAddress).safeIncreaseAllowance(
-            farmInfo[activePid].routerAddress,
-            _pcsBalance
-        );
-
-        (uint256 _amountA, uint256 _amountB) = IUniswapV2Router01(
-            farmInfo[activePid].routerAddress
-        ).removeLiquidity(
-                busd,
-                usdt,
-                _pcsBalance,
-                0,
-                0,
-                address(this),
-                block.timestamp
-            );
-        require(_amountA > 0 && _amountB > 0, "no lp created");
-        uint256 _busd = IERC20(busd).balanceOf(address(this));
-        uint256 _usdt = IERC20(usdt).balanceOf(address(this));
-        uint256 _earned = IERC20(farmInfo[activePid].earnedAddress).balanceOf(
-            address(this)
-        );
-
-        IERC20(busd).safeIncreaseAllowance(
-            farmInfo[_newPid].routerAddress,
-            _busd
-        );
-        IERC20(usdt).safeIncreaseAllowance(
-            farmInfo[_newPid].routerAddress,
-            _usdt
-        );
-
-        uint256 dev_earned = (_earned * 30) / 100;
-        _earned -= dev_earned;
-
-        farmInfo[activePid].accumulatedTokenPerShare +=
-            (_earned * 1e12) /
-            farmInfo[activePid].totalShare;
-
-        (
-            uint256 _amountToken,
-            uint256 _amountETH,
-            uint256 _liquidity
-        ) = IUniswapV2Router01(farmInfo[_newPid].routerAddress).addLiquidity(
-                busd,
-                usdt,
-                _busd,
-                _usdt,
-                0,
-                0,
-                address(this),
-                block.timestamp
-            );
-
-        require(
-            _amountToken > 0 && _amountETH > 0 && _liquidity > 0,
-            "no liquidity added"
-        );
-
-        uint256 _newLp = IERC20(farmInfo[_newPid].lpAddress).balanceOf(
-            address(this)
-        );
-        IERC20(farmInfo[_newPid].lpAddress).safeIncreaseAllowance(
-            farmInfo[_newPid].farmAddress,
-            _newLp
-        );
-        IPancakeswapFarm(farmInfo[_newPid].farmAddress).deposit(
-            farmInfo[_newPid].pid,
-            _newLp
-        );
-
+        require(_newPid < 3, "uinitialized pid");
         activePid = _newPid;
         emit ChangeActiveStrategy(_newPid);
     }
@@ -557,10 +477,10 @@ contract DeFiAIStableStrat is Ownable, Pausable {
         );
     }
 
-    function _unfarm(uint256 _wantAmt) internal virtual {
+    function _unfarm(uint256 _wantAmt, uint8 _pid) internal virtual {
         uint256 _lp = _wantAmt / 2;
 
-		FarmInfo memory activeFarm = farmInfo[activePid];
+		FarmInfo memory activeFarm = farmInfo[_pid];
         address farmAddress = activeFarm.farmAddress;
         uint256 pid = activeFarm.pid;
         (uint256 _shares, ) = IPancakeswapFarm(farmAddress).userInfo(
@@ -573,12 +493,12 @@ contract DeFiAIStableStrat is Ownable, Pausable {
         IPancakeswapFarm(farmAddress).withdraw(pid, _lp);
     }
 
-    function _collect(uint256 _earnBeforeFarm)
+    function _collect(uint256 _earnBeforeFarm, uint8 _pid)
         internal
         virtual
         returns (uint256)
     {
-		FarmInfo memory activeFarm = farmInfo[activePid];
+		FarmInfo memory activeFarm = farmInfo[_pid];
         uint256 _earned = IERC20(activeFarm.earnedAddress).balanceOf(
             address(this)
         );
@@ -631,10 +551,10 @@ contract DeFiAIStableStrat is Ownable, Pausable {
         );
     }
 
-    function _convertLpToWant(address _wantAddress, address _pairAddress)
+    function _convertLpToWant(address _wantAddress, address _pairAddress, uint8 _pid)
         internal
     {
-		FarmInfo memory activeFarm = farmInfo[activePid];
+		FarmInfo memory activeFarm = farmInfo[_pid];
         address lpAddress = activeFarm.lpAddress;
         address routerAddress = activeFarm.routerAddress;
         uint256 _lp = IERC20(lpAddress).balanceOf(address(this));
