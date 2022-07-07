@@ -206,5 +206,6 @@ npx hardhat test
 <br>
 
 Note for Time-independent accumulated reward distribution:
-For every action a shareholder takes (deposit/withdraw), their reward (if any) will be harvested from the pool, and distributed to the shareholders, before updating their share (due to the deposit/withdraw), as such there is no unfair reward distribution. There is hence no need to record the passage of time, as we are able to distribute their reward (CAKE/MDX/BSW), based on thier shares. We are not issuing our token, but the token of the pool.
+<br>
+For every action a shareholder takes (deposit/withdraw), their reward (if any) will be harvested from the pool, and distributed to the shareholders, before updating their share (due to the deposit/withdraw). As such, there is no unfair reward distribution. There is hence no need to record the passage of time, as we are able to distribute their reward (CAKE/MDX/BSW), based on thier shares.
  
