@@ -190,7 +190,7 @@ npx hardhat test
     - User deposits into farm
     - Time passes
     - Dev/Owner changes strategy
-    - User withdraws from farm and get their rewards
+    - User withdraws from farm (inactive) and get their rewards
     - User deposits into farm again, but this time it has a different strategy, earning different type of reward token
     <br>
 # Requirements
@@ -205,7 +205,13 @@ npx hardhat test
 
 <br>
 
-Note for Time-independent accumulated reward distribution:
-<br>
-For every action a shareholder takes (deposit/withdraw), their reward (if any) will be harvested from the pool, and distributed to the shareholders, before updating their share (due to the deposit/withdraw). As such, there is no unfair reward distribution. There is hence no need to record the passage of time, as we are able to distribute their reward (CAKE/MDX/BSW), based on thier shares.
+# Notes
+
+### Note for time-independent accumulated reward distribution:
+- For every action a shareholder takes (deposit/withdraw), their reward (if any) will be harvested from the pool, and distributed to the shareholders, before updating their share (due to the deposit/withdraw). As such, there is no unfair reward distribution. There is hence no need to record the passage of time, as we are able to distribute their reward (CAKE/MDX/BSW), based on thier shares.
+<br></br>
+
+### Note for block numbers:
+- Block numbers are not used for calculation purposes. They are only used to record the block for users' last deposit, and prevent them from making a withdrawal in the same/next block, to prevent a flashloan attack.
+
  
