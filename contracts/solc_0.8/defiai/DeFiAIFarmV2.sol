@@ -21,10 +21,6 @@ contract DeFiAIFarmV2 is Ownable {
         address strat;
     }
 
-    /* ========== CONSTANTS ============= */
-
-    // Denominator for fee calculations.
-    uint256 public constant FEE_DENOM = 10000;
 
     /* ========== STATE VARIABLES ========== */
 
@@ -59,7 +55,7 @@ contract DeFiAIFarmV2 is Ownable {
 
     /* ========== VIEWS ========== */
 
-    function getPoolInfo() public view returns (address) {
+    function getPoolInfo() external view returns (address) {
         return poolInfo.strat;
     }
 

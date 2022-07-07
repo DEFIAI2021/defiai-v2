@@ -4,13 +4,10 @@ pragma solidity 0.8.4;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
-import "@openzeppelin/contracts/security/Pausable.sol";
 import "./interfaces/IDeFiAIMultiStrat.sol";
 import "../pcs/interfaces/IPancakeswapFarm.sol";
 import "../acs/interfaces/IStableSwap.sol";
-import "hardhat/console.sol";
 
 interface IUniswapV2Router01 {
     function factory() external pure returns (address);
@@ -171,8 +168,10 @@ interface IUniswapV2Router01 {
         returns (uint256[] memory amounts);
 }
 
-contract DeFiAIStableStrat is Ownable, Pausable {
+contract DeFiAIStableStrat is Ownable {
     using SafeERC20 for IERC20;
+
+    /* ========== EVENTS ============= */
 
     event Init(
         address[] _pcsAddresses,
@@ -199,14 +198,9 @@ contract DeFiAIStableStrat is Ownable, Pausable {
 
     struct User {
         uint256 balance;
-        uint256 accumulatedClaimedToken;
+        uint256 rewardDebt;
         uint256 lastDepositBlock;
     }
-
-    /* ========== CONSTANTS ============= */
-
-    // Maximum slippage factor.
-    uint256 public constant SLIPPAGE_FACTOR_MAX = 10000;
 
     /* ========== STATE VARIABLES ========== */
 
@@ -351,57 +345,64 @@ contract DeFiAIStableStrat is Ownable, Pausable {
 
     /* ========== MUTATIVE FUNCTIONS ========== */
 
+ 
+    /** Deposits the amount from the user into an active pool and withdrawing any rewards the user
+        had previously earned from the pool.
+     */ 
     function deposit(
-        address user,
-        uint256 _wantAmt,
-        address _wantAddress
+        address user,   // the address of the user
+        uint256 _wantAmt,   // the amount from the user
+        address _wantAddress    //the address of the token deposited from the user, e.g BUSD
     ) external virtual onlyFarms returns (uint256) {
-        require(_wantAmt > 0, "DeFiAIMultiStrat::: Zero deposit_wantAmt");
+        require(_wantAmt > 0, "DeFiAIMultiStrat::: Zero deposit_wantAmt"); 
         IERC20(_wantAddress).safeTransferFrom(
             address(msg.sender),
             address(this),
             _wantAmt
-        );
+        ); 
 
         _convertWantToLp(_wantAddress, _wantAddress == busd ? usdt : busd);
         uint256 _earnedBeforeFarm = IERC20(farmInfo[activePid].earnedAddress)
             .balanceOf(address(this));
-        uint256 poolShare = farmInfo[activePid].totalShare;
-        _farm();
-        if (farmInfo[activePid].totalShare > 0) {
-            uint256 earn = _collect(_earnedBeforeFarm, activePid);
+        uint256 poolShareBeforeFarm = farmInfo[activePid].totalShare;
+        _farm();    //deposits the amount into the active pool
+        uint256 poolShareAfterFarm = farmInfo[activePid].totalShare;
+        if (poolShareAfterFarm > 0) {   //condition check to prevent division by zero
+            uint256 earn = _collect(_earnedBeforeFarm, activePid);  //the amount of reward that all users earns from harvest
 			 farmInfo[activePid].accumulatedTokenPerShare +=
                 (earn * 1e12) /
-                poolShare ;
-            uint256 newUserTokenAmount = (farmInfo[activePid]
+                poolShareBeforeFarm ;   //updating the accumulatedTokenPerShare for the pool
+            uint256 accumulatedRewardToken = (farmInfo[activePid]
                 .accumulatedTokenPerShare * userInfo[user][activePid].balance) /
-                1e12;
-            uint256 promise_reward = newUserTokenAmount -
-                userInfo[user][activePid].accumulatedClaimedToken;
+                1e12;   //calculating the accumulatedTokens for the user
+            uint256 promise_reward = accumulatedRewardToken -
+                userInfo[user][activePid].rewardDebt;   //the reward to be distributed to the user
             IERC20(farmInfo[activePid].earnedAddress).safeTransfer(
                 user,
                 promise_reward
-            );
+            ); 
             userInfo[user][activePid]
-                .accumulatedClaimedToken = newUserTokenAmount;
+                .rewardDebt = accumulatedRewardToken;   //updates the reward debt of the user
         }
         farmInfo[activePid].totalShare += _wantAmt;
         userInfo[user][activePid].balance += _wantAmt;
-        userInfo[user][activePid].lastDepositBlock = block.number;
+        userInfo[user][activePid].lastDepositBlock = block.number;  //record the block number of the deposit (not for calculation)
 
         return _wantAmt;
     }
 
+    /** Withdraws the amount for the user, from a specified pool, and harvests the reward for the user.
+     */
     function withdraw(
-        uint8 _pid,
-        address user,
-        uint256 _wantAmt,
-        address _wantAddress
+        uint8 _pid,     //the pool id to be withdrawn from
+        address user,   // the address of the user
+        uint256 _wantAmt,   // the amount to be withdrawn
+        address _wantAddress    //the address of the amount to be withdrawn
     ) external virtual onlyFarms returns (uint256) {
         require(
-            block.number > userInfo[user][_pid].lastDepositBlock + 1,
+            block.number > userInfo[user][_pid].lastDepositBlock + 1,   
             "DeFiAIMultiStrat::withdraw: cannot deposit and withdraw in same block"
-        );
+        ); // checks the last deposit block number. the user cannot withdraw directly after they deposit
         require(_wantAmt > 0, "DeFiAIMultiStrat::withdraw: Zero _wantAmt");
         require(
             _wantAmt <= userInfo[user][_pid].balance,
@@ -409,21 +410,21 @@ contract DeFiAIStableStrat is Ownable, Pausable {
         );
         uint256 poolShare = farmInfo[_pid].totalShare;
         uint256 _earnedBeforeFarm = IERC20(farmInfo[_pid].earnedAddress)
-            .balanceOf(address(this));
+            .balanceOf(address(this));  //the amount users would have earned before this withdrawal
         _unfarm(_wantAmt,_pid);
         _convertLpToWant(_wantAddress, _wantAddress == busd ? usdt : busd, _pid);
-        uint256 wantBalance = IERC20(_wantAddress).balanceOf(address(this));
-        _wantAmt = _wantAmt > wantBalance ? wantBalance : _wantAmt;
+        uint256 wantBalance = IERC20(_wantAddress).balanceOf(address(this));    //the balance of the address
+        _wantAmt = _wantAmt > wantBalance ? wantBalance : _wantAmt;     //prepare to transfer the remainder in the address, in the event that the withdrawal amount is slightly more than the remainder
         IERC20(_wantAddress).safeTransfer(defiaiFarmAddress, _wantAmt);
-        uint256 earn = _collect(_earnedBeforeFarm, _pid);
-        farmInfo[_pid].accumulatedTokenPerShare += (earn * 1e12) / poolShare;
-        uint256 newUserTokenAmount = (farmInfo[_pid].accumulatedTokenPerShare *
-            userInfo[user][_pid].balance) / 1e12;
-        uint256 promise_reward = newUserTokenAmount -
-            userInfo[user][_pid].accumulatedClaimedToken;
+        uint256 earn = _collect(_earnedBeforeFarm, _pid);   //the amount of reward that all users earns from harvest
+        farmInfo[_pid].accumulatedTokenPerShare += (earn * 1e12) / poolShare;   //updating the accumulatedTokenPerShare for the pool
+        uint256 accumulatedRewardToken = (farmInfo[_pid].accumulatedTokenPerShare *
+            userInfo[user][_pid].balance) / 1e12;   //calculating the accumulatedTokens for the user
+        uint256 promise_reward = accumulatedRewardToken -
+            userInfo[user][_pid].rewardDebt;    //the reward to be distributed to the user
         promise_reward = promise_reward > earn ? earn : promise_reward;
         IERC20(farmInfo[_pid].earnedAddress).safeTransfer(user, promise_reward);
-        userInfo[user][_pid].accumulatedClaimedToken = newUserTokenAmount;
+        userInfo[user][_pid].rewardDebt = accumulatedRewardToken;   //updates the reward debt of the user
 
         farmInfo[_pid].totalShare -= _wantAmt;
         userInfo[user][_pid].balance -= _wantAmt;
@@ -603,7 +604,7 @@ contract DeFiAIStableStrat is Ownable, Pausable {
 
     /* ========== VIEWS ========== */
 
-    function balances(address user) public view returns (uint256) {
+    function balances(address user) external view returns (uint256) {
         return userInfo[user][activePid].balance;
     }
 }

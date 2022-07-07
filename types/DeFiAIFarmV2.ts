@@ -20,7 +20,6 @@ import { TypedEventFilter, TypedEvent, TypedListener, OnEvent } from "./common";
 export interface DeFiAIFarmV2Interface extends utils.Interface {
   contractName: "DeFiAIFarmV2";
   functions: {
-    "FEE_DENOM()": FunctionFragment;
     "deposit(uint256)": FunctionFragment;
     "devAddress()": FunctionFragment;
     "getDevAddress()": FunctionFragment;
@@ -35,7 +34,6 @@ export interface DeFiAIFarmV2Interface extends utils.Interface {
     "withdraw(uint256,uint8)": FunctionFragment;
   };
 
-  encodeFunctionData(functionFragment: "FEE_DENOM", values?: undefined): string;
   encodeFunctionData(
     functionFragment: "deposit",
     values: [BigNumberish]
@@ -76,7 +74,6 @@ export interface DeFiAIFarmV2Interface extends utils.Interface {
     values: [BigNumberish, BigNumberish]
   ): string;
 
-  decodeFunctionResult(functionFragment: "FEE_DENOM", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "deposit", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "devAddress", data: BytesLike): Result;
   decodeFunctionResult(
@@ -166,8 +163,6 @@ export interface DeFiAIFarmV2 extends BaseContract {
   removeListener: OnEvent<this>;
 
   functions: {
-    FEE_DENOM(overrides?: CallOverrides): Promise<[BigNumber]>;
-
     deposit(
       _wantAmt: BigNumberish,
       overrides?: Overrides & { from?: string | Promise<string> }
@@ -214,8 +209,6 @@ export interface DeFiAIFarmV2 extends BaseContract {
     ): Promise<ContractTransaction>;
   };
 
-  FEE_DENOM(overrides?: CallOverrides): Promise<BigNumber>;
-
   deposit(
     _wantAmt: BigNumberish,
     overrides?: Overrides & { from?: string | Promise<string> }
@@ -259,8 +252,6 @@ export interface DeFiAIFarmV2 extends BaseContract {
   ): Promise<ContractTransaction>;
 
   callStatic: {
-    FEE_DENOM(overrides?: CallOverrides): Promise<BigNumber>;
-
     deposit(_wantAmt: BigNumberish, overrides?: CallOverrides): Promise<void>;
 
     devAddress(overrides?: CallOverrides): Promise<string>;
@@ -336,8 +327,6 @@ export interface DeFiAIFarmV2 extends BaseContract {
   };
 
   estimateGas: {
-    FEE_DENOM(overrides?: CallOverrides): Promise<BigNumber>;
-
     deposit(
       _wantAmt: BigNumberish,
       overrides?: Overrides & { from?: string | Promise<string> }
@@ -383,8 +372,6 @@ export interface DeFiAIFarmV2 extends BaseContract {
   };
 
   populateTransaction: {
-    FEE_DENOM(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
     deposit(
       _wantAmt: BigNumberish,
       overrides?: Overrides & { from?: string | Promise<string> }

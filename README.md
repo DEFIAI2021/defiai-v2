@@ -108,7 +108,7 @@ npm install --save-dev "hardhat@^2.9.1" "@nomiclabs/hardhat-waffle@^2.0.0" "ethe
 
 To install the hardhat deploy package, do:
 ```
-npm i hardhat deploy
+npm i hardhat-deploy
 ```
 <br>
 
@@ -126,10 +126,11 @@ npx hardhat compile
 To deploy the contracts, run the following:
 
 ```
-npx deploy –-tags DEFIAI,DEFIAIFarm_deploy,DEFIAIFarm_init
+npx hardhat deploy --tags DEFIAI,DEFIAIFarm_deploy,DEFIAIFarm_init
 ```
 
 This will deploy the contracts to your local environment.
+> **_NOTE:_**  Do make sure the "--tags" is greyed-out, if it is not, try retyping the "--tags" in the terminal
 
 <br>
 
@@ -139,6 +140,35 @@ To run the test scripts, run this command in a terminal:
 npx hardhat test
 
 ```
+If you encounter this error:
+<br></br>
+![img](./images/error.png)
+<br></br>
+Rerun "npx hardhat test", but stop the execution with Ctrl+C, once this appears: 
+<br></br>
+![img](./images/init.png)
+<br></br>
+Then, go to contracts/solc_0.6/pcs/PancakeRouter.sol, find this function:
+<br></br>
+![img](./images/cake.png)
+<br></br>
+Replace the hex value with the Cake Factory INIT value
+<br></br>
+![img](./images/init%20hex.png)
+
+Go to contracts/solc_0.6/bsw/BiswapRouter02.sol, find this function:
+<br></br>
+![img](./images/biswap.png)
+Replace the hex value with the BSW Factory INIT value
+<br></br>
+![img](./images/init%20bsw.png)
+<br></br>
+Run "npx hardhat test" again:
+```
+npx hardhat test
+
+```
+
 
 
 # Flow
@@ -164,7 +194,7 @@ npx hardhat test
     - User deposits into farm again, but this time it has a different strategy, earning different type of reward token
     <br>
 # Requirements
- 1.  Users are able to deposit into farm
+ 1. Users are able to deposit into farm
  2. Users are able to withdraw from the farm anytime, as long as it is not in the same block/next block with their deposit
  3. Users will get their rewards (CAKE/MDX/BSW) when they deposit again/withdraw
  4. Developers are able to get 30% of the rewards earned by the user every time user deposits/withdraws
@@ -173,4 +203,8 @@ npx hardhat test
  7. Users are able to withdraw their balance from previous pools, even after the strategy has changed
  8. Developers are able to emergency withdraw to take any residue left in the contract
 
+<br>
+
+Note for Time-independent accumulated reward distribution:
+For every action a shareholder takes (deposit/withdraw), their reward (if any) will be harvested from the pool, and distributed to the shareholders, before updating their share (due to the deposit/withdraw), as such there is no unfair reward distribution. There is hence no need to record the passage of time, as we are able to distribute their reward (CAKE/MDX/BSW), based on thier shares. We are not issuing our token, but the token of the pool.
  

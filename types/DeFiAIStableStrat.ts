@@ -20,7 +20,6 @@ import { TypedEventFilter, TypedEvent, TypedListener, OnEvent } from "./common";
 export interface DeFiAIStableStratInterface extends utils.Interface {
   contractName: "DeFiAIStableStrat";
   functions: {
-    "SLIPPAGE_FACTOR_MAX()": FunctionFragment;
     "activePid()": FunctionFragment;
     "balances(address)": FunctionFragment;
     "busd()": FunctionFragment;
@@ -45,10 +44,6 @@ export interface DeFiAIStableStratInterface extends utils.Interface {
     "withdraw(uint8,address,uint256,address)": FunctionFragment;
   };
 
-  encodeFunctionData(
-    functionFragment: "SLIPPAGE_FACTOR_MAX",
-    values?: undefined
-  ): string;
   encodeFunctionData(functionFragment: "activePid", values?: undefined): string;
   encodeFunctionData(functionFragment: "balances", values: [string]): string;
   encodeFunctionData(functionFragment: "busd", values?: undefined): string;
@@ -121,10 +116,6 @@ export interface DeFiAIStableStratInterface extends utils.Interface {
     values: [BigNumberish, string, BigNumberish, string]
   ): string;
 
-  decodeFunctionResult(
-    functionFragment: "SLIPPAGE_FACTOR_MAX",
-    data: BytesLike
-  ): Result;
   decodeFunctionResult(functionFragment: "activePid", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "balances", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "busd", data: BytesLike): Result;
@@ -259,8 +250,6 @@ export interface DeFiAIStableStrat extends BaseContract {
   removeListener: OnEvent<this>;
 
   functions: {
-    SLIPPAGE_FACTOR_MAX(overrides?: CallOverrides): Promise<[BigNumber]>;
-
     activePid(overrides?: CallOverrides): Promise<[number]>;
 
     balances(user: string, overrides?: CallOverrides): Promise<[BigNumber]>;
@@ -349,7 +338,7 @@ export interface DeFiAIStableStrat extends BaseContract {
     ): Promise<
       [BigNumber, BigNumber, BigNumber] & {
         balance: BigNumber;
-        accumulatedClaimedToken: BigNumber;
+        rewardDebt: BigNumber;
         lastDepositBlock: BigNumber;
       }
     >;
@@ -362,8 +351,6 @@ export interface DeFiAIStableStrat extends BaseContract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
   };
-
-  SLIPPAGE_FACTOR_MAX(overrides?: CallOverrides): Promise<BigNumber>;
 
   activePid(overrides?: CallOverrides): Promise<number>;
 
@@ -453,7 +440,7 @@ export interface DeFiAIStableStrat extends BaseContract {
   ): Promise<
     [BigNumber, BigNumber, BigNumber] & {
       balance: BigNumber;
-      accumulatedClaimedToken: BigNumber;
+      rewardDebt: BigNumber;
       lastDepositBlock: BigNumber;
     }
   >;
@@ -467,8 +454,6 @@ export interface DeFiAIStableStrat extends BaseContract {
   ): Promise<ContractTransaction>;
 
   callStatic: {
-    SLIPPAGE_FACTOR_MAX(overrides?: CallOverrides): Promise<BigNumber>;
-
     activePid(overrides?: CallOverrides): Promise<number>;
 
     balances(user: string, overrides?: CallOverrides): Promise<BigNumber>;
@@ -555,7 +540,7 @@ export interface DeFiAIStableStrat extends BaseContract {
     ): Promise<
       [BigNumber, BigNumber, BigNumber] & {
         balance: BigNumber;
-        accumulatedClaimedToken: BigNumber;
+        rewardDebt: BigNumber;
         lastDepositBlock: BigNumber;
       }
     >;
@@ -612,8 +597,6 @@ export interface DeFiAIStableStrat extends BaseContract {
   };
 
   estimateGas: {
-    SLIPPAGE_FACTOR_MAX(overrides?: CallOverrides): Promise<BigNumber>;
-
     activePid(overrides?: CallOverrides): Promise<BigNumber>;
 
     balances(user: string, overrides?: CallOverrides): Promise<BigNumber>;
@@ -698,10 +681,6 @@ export interface DeFiAIStableStrat extends BaseContract {
   };
 
   populateTransaction: {
-    SLIPPAGE_FACTOR_MAX(
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
     activePid(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
     balances(
