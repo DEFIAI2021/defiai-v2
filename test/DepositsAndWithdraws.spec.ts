@@ -87,7 +87,6 @@ describe("Farm Withdraw", async () => {
 			const { alice, DEFIAIFarm, BUSDStrat } = await setup();
 
 			await DEFIAIFarm.connect(alice).deposit(parseEther("10000"));
-			expect(await BUSDStrat.balances(alice._address)).to.eq(parseEther("10000"));
 
 			await expect(DEFIAIFarm.connect(alice).deposit(parseEther("0"))).to.be.reverted;
 			await expect(DEFIAIFarm.connect(alice).deposit(parseEther("-1"))).to.be.reverted;

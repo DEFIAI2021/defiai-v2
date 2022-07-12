@@ -363,15 +363,14 @@ contract DeFiAIStableStrat is Ownable {
         _convertWantToLp(_wantAddress, _wantAddress == busd ? usdt : busd);
         uint256 _earnedBeforeFarm = IERC20(farmInfo[activePid].earnedAddress)
             .balanceOf(address(this));
-        uint256 poolShareBeforeFarm = farmInfo[activePid].totalShare;
+        uint256 poolShare = farmInfo[activePid].totalShare;
         _farm(); //deposits the amount into the active pool
-        uint256 poolShareAfterFarm = farmInfo[activePid].totalShare;
-        if (poolShareAfterFarm > 0) {
+        if (poolShare > 0) {
             //condition check to prevent division by zero
             uint256 earn = _collect(_earnedBeforeFarm, activePid); //the amount of reward that all users earns from harvest
             farmInfo[activePid].accumulatedTokenPerShare +=
                 (earn * 1e12) /
-                poolShareBeforeFarm; //updating the accumulatedTokenPerShare for the pool
+                poolShare; //updating the accumulatedTokenPerShare for the pool
             uint256 accumulatedRewardToken = (farmInfo[activePid]
                 .accumulatedTokenPerShare * userInfo[user][activePid].balance) /
                 1e12; //calculating the accumulatedTokens for the user
@@ -407,7 +406,6 @@ contract DeFiAIStableStrat is Ownable {
             _wantAmt <= userInfo[user][_pid].balance,
             "DeFiAIMultiStrat::withdraw: No Enough balance"
         );
-        uint256 poolShare = farmInfo[_pid].totalShare;
         uint256 _earnedBeforeFarm = IERC20(farmInfo[_pid].earnedAddress)
             .balanceOf(address(this)); //the amount users would have earned before this withdrawal
         _unfarm(_wantAmt, _pid);
@@ -420,7 +418,9 @@ contract DeFiAIStableStrat is Ownable {
         _wantAmt = _wantAmt > wantBalance ? wantBalance : _wantAmt; //prepare to transfer the remainder in the address, in the event that the withdrawal amount is slightly more than the remainder
         IERC20(_wantAddress).safeTransfer(defiaiFarmAddress, _wantAmt);
         uint256 earn = _collect(_earnedBeforeFarm, _pid); //the amount of reward that all users earns from harvest
-        farmInfo[_pid].accumulatedTokenPerShare += (earn * 1e12) / poolShare; //updating the accumulatedTokenPerShare for the pool
+        farmInfo[_pid].accumulatedTokenPerShare +=
+            (earn * 1e12) /
+            farmInfo[_pid].totalShare; //updating the accumulatedTokenPerShare for the pool
         uint256 accumulatedRewardToken = (farmInfo[_pid]
             .accumulatedTokenPerShare * userInfo[user][_pid].balance) / 1e12; //calculating the accumulatedTokens for the user
         uint256 promise_reward = accumulatedRewardToken -
@@ -609,7 +609,19 @@ contract DeFiAIStableStrat is Ownable {
 
     /* ========== VIEWS ========== */
 
-    function balances(address user) external view returns (uint256) {
-        return userInfo[user][activePid].balance;
+    function balances(address user)
+        external
+        view
+        returns (
+            uint256,
+            uint256,
+            uint256
+        )
+    {
+        return (
+            userInfo[user][0].balance,
+            userInfo[user][1].balance,
+            userInfo[user][2].balance
+        );
     }
 }

@@ -32,7 +32,6 @@ export interface DeFiAIStableStratInterface extends utils.Interface {
     "init(address[],uint256,address[],uint256,address[],uint256)": FunctionFragment;
     "isInit()": FunctionFragment;
     "owner()": FunctionFragment;
-    "paused()": FunctionFragment;
     "renounceOwnership()": FunctionFragment;
     "setDevAddress(address)": FunctionFragment;
     "stratAddress()": FunctionFragment;
@@ -84,7 +83,6 @@ export interface DeFiAIStableStratInterface extends utils.Interface {
   ): string;
   encodeFunctionData(functionFragment: "isInit", values?: undefined): string;
   encodeFunctionData(functionFragment: "owner", values?: undefined): string;
-  encodeFunctionData(functionFragment: "paused", values?: undefined): string;
   encodeFunctionData(
     functionFragment: "renounceOwnership",
     values?: undefined
@@ -137,7 +135,6 @@ export interface DeFiAIStableStratInterface extends utils.Interface {
   decodeFunctionResult(functionFragment: "init", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "isInit", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "owner", data: BytesLike): Result;
-  decodeFunctionResult(functionFragment: "paused", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "renounceOwnership",
     data: BytesLike
@@ -167,17 +164,13 @@ export interface DeFiAIStableStratInterface extends utils.Interface {
     "ChangeActiveStrategy(uint8)": EventFragment;
     "Init(address[],uint256,address[],uint256,address[],uint256)": EventFragment;
     "OwnershipTransferred(address,address)": EventFragment;
-    "Paused(address)": EventFragment;
     "SetDevAddress(address)": EventFragment;
-    "Unpaused(address)": EventFragment;
   };
 
   getEvent(nameOrSignatureOrTopic: "ChangeActiveStrategy"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "Init"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "OwnershipTransferred"): EventFragment;
-  getEvent(nameOrSignatureOrTopic: "Paused"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "SetDevAddress"): EventFragment;
-  getEvent(nameOrSignatureOrTopic: "Unpaused"): EventFragment;
 }
 
 export type ChangeActiveStrategyEvent = TypedEvent<
@@ -210,17 +203,9 @@ export type OwnershipTransferredEvent = TypedEvent<
 export type OwnershipTransferredEventFilter =
   TypedEventFilter<OwnershipTransferredEvent>;
 
-export type PausedEvent = TypedEvent<[string], { account: string }>;
-
-export type PausedEventFilter = TypedEventFilter<PausedEvent>;
-
 export type SetDevAddressEvent = TypedEvent<[string], { _devAddress: string }>;
 
 export type SetDevAddressEventFilter = TypedEventFilter<SetDevAddressEvent>;
-
-export type UnpausedEvent = TypedEvent<[string], { account: string }>;
-
-export type UnpausedEventFilter = TypedEventFilter<UnpausedEvent>;
 
 export interface DeFiAIStableStrat extends BaseContract {
   contractName: "DeFiAIStableStrat";
@@ -252,7 +237,10 @@ export interface DeFiAIStableStrat extends BaseContract {
   functions: {
     activePid(overrides?: CallOverrides): Promise<[number]>;
 
-    balances(user: string, overrides?: CallOverrides): Promise<[BigNumber]>;
+    balances(
+      user: string,
+      overrides?: CallOverrides
+    ): Promise<[BigNumber, BigNumber, BigNumber]>;
 
     busd(overrides?: CallOverrides): Promise<[string]>;
 
@@ -307,8 +295,6 @@ export interface DeFiAIStableStrat extends BaseContract {
 
     owner(overrides?: CallOverrides): Promise<[string]>;
 
-    paused(overrides?: CallOverrides): Promise<[boolean]>;
-
     renounceOwnership(
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
@@ -354,7 +340,10 @@ export interface DeFiAIStableStrat extends BaseContract {
 
   activePid(overrides?: CallOverrides): Promise<number>;
 
-  balances(user: string, overrides?: CallOverrides): Promise<BigNumber>;
+  balances(
+    user: string,
+    overrides?: CallOverrides
+  ): Promise<[BigNumber, BigNumber, BigNumber]>;
 
   busd(overrides?: CallOverrides): Promise<string>;
 
@@ -409,8 +398,6 @@ export interface DeFiAIStableStrat extends BaseContract {
 
   owner(overrides?: CallOverrides): Promise<string>;
 
-  paused(overrides?: CallOverrides): Promise<boolean>;
-
   renounceOwnership(
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
@@ -456,7 +443,10 @@ export interface DeFiAIStableStrat extends BaseContract {
   callStatic: {
     activePid(overrides?: CallOverrides): Promise<number>;
 
-    balances(user: string, overrides?: CallOverrides): Promise<BigNumber>;
+    balances(
+      user: string,
+      overrides?: CallOverrides
+    ): Promise<[BigNumber, BigNumber, BigNumber]>;
 
     busd(overrides?: CallOverrides): Promise<string>;
 
@@ -510,8 +500,6 @@ export interface DeFiAIStableStrat extends BaseContract {
     isInit(overrides?: CallOverrides): Promise<boolean>;
 
     owner(overrides?: CallOverrides): Promise<string>;
-
-    paused(overrides?: CallOverrides): Promise<boolean>;
 
     renounceOwnership(overrides?: CallOverrides): Promise<void>;
 
@@ -586,14 +574,8 @@ export interface DeFiAIStableStrat extends BaseContract {
       newOwner?: string | null
     ): OwnershipTransferredEventFilter;
 
-    "Paused(address)"(account?: null): PausedEventFilter;
-    Paused(account?: null): PausedEventFilter;
-
     "SetDevAddress(address)"(_devAddress?: null): SetDevAddressEventFilter;
     SetDevAddress(_devAddress?: null): SetDevAddressEventFilter;
-
-    "Unpaused(address)"(account?: null): UnpausedEventFilter;
-    Unpaused(account?: null): UnpausedEventFilter;
   };
 
   estimateGas: {
@@ -640,8 +622,6 @@ export interface DeFiAIStableStrat extends BaseContract {
     isInit(overrides?: CallOverrides): Promise<BigNumber>;
 
     owner(overrides?: CallOverrides): Promise<BigNumber>;
-
-    paused(overrides?: CallOverrides): Promise<BigNumber>;
 
     renounceOwnership(
       overrides?: Overrides & { from?: string | Promise<string> }
@@ -730,8 +710,6 @@ export interface DeFiAIStableStrat extends BaseContract {
     isInit(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
     owner(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    paused(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
     renounceOwnership(
       overrides?: Overrides & { from?: string | Promise<string> }
