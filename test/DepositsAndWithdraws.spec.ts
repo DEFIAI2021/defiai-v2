@@ -212,7 +212,7 @@ describe("Farm Withdraw", async () => {
 
 
 	describe("Withdraws", async () => {
-		it("should withdraw from farm,multiple user (Case1)", async () => {
+		it("should withdraw from farm,multiple user (Case1, audit's test case)", async () => {
 			const { alice, bob, DEFIAIFarm, BUSD, CAKE } = await setup();
 
 			await DEFIAIFarm.connect(alice).deposit(parseEther("10000"));
