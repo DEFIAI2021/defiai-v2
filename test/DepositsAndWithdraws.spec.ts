@@ -1,6 +1,6 @@
 import { expect } from "chai";
 import { BigNumberish, Signer } from "ethers";
-import { parseEther } from "ethers/lib/utils";
+import { parseEther, formatEther} from "ethers/lib/utils";
 import hre, { deployments } from "hardhat";
 import {
 	DeFiAIFarmV2,
@@ -229,6 +229,7 @@ describe("Farm Withdraw", async () => {
 
 			await DEFIAIFarm.connect(alice).withdraw(parseEther("10000"), 0);
 			await DEFIAIFarm.connect(bob).withdraw(parseEther("10000"), 0);
+
 			const newBalance_alice = await BUSD.balanceOf(alice._address);
 			const newBalance_bob = await BUSD.balanceOf(bob._address);
 
@@ -238,9 +239,11 @@ describe("Farm Withdraw", async () => {
 			expect(newBalance_alice.sub(oldBalance_alice)).to.be.above(parseEther("9979"));
 
 			const alice_reward = await CAKE.balanceOf(alice._address);
-			expect(alice_reward).to.be.above(parseEther("1"));
+			console.log("ALICE REWARD:",formatEther(alice_reward));
+			expect(alice_reward).to.be.above(parseEther("700"));
 			const bob_reward = await CAKE.balanceOf(bob._address);
-			expect(bob_reward).to.be.above(parseEther("1"));
+			console.log("BOB REWARD:",formatEther(bob_reward));
+			expect(bob_reward).to.be.above(parseEther("700"));
 
 		});
 
@@ -270,9 +273,9 @@ describe("Farm Withdraw", async () => {
 			expect(newBalance_alice.sub(oldBalance_alice)).to.be.above(parseEther("9979"));
 
 			const alice_reward = await CAKE.balanceOf(alice._address);
-			expect(alice_reward).to.be.above(parseEther("1"));
+			expect(alice_reward).to.be.above(parseEther("700"));
 			const bob_reward = await CAKE.balanceOf(bob._address);
-			expect(bob_reward).to.be.above(parseEther("1"));
+			expect(bob_reward).to.be.above(parseEther("700"));
 		});
 
 		it("should withdraw from farm,multiple user (Case3)", async () => {
@@ -301,9 +304,9 @@ describe("Farm Withdraw", async () => {
 			expect(newBalance_alice.sub(oldBalance_alice)).to.be.above(parseEther("9979"));
 
 			const alice_reward = await CAKE.balanceOf(alice._address);
-			expect(alice_reward).to.be.above(parseEther("1"));
+			expect(alice_reward).to.be.above(parseEther("700"));
 			const bob_reward = await CAKE.balanceOf(bob._address);
-			expect(bob_reward).to.be.above(parseEther("1"));
+			expect(bob_reward).to.be.above(parseEther("700"));
 		});
 
 		it("should withdraw from farm,multiple user (Case3)", async () => {
@@ -332,9 +335,9 @@ describe("Farm Withdraw", async () => {
 			expect(newBalance_alice.sub(oldBalance_alice)).to.be.above(parseEther("9979"));
 
 			const alice_reward = await CAKE.balanceOf(alice._address);
-			expect(alice_reward).to.be.above(parseEther("1"));
+			expect(alice_reward).to.be.above(parseEther("700"));
 			const bob_reward = await CAKE.balanceOf(bob._address);
-			expect(bob_reward).to.be.above(parseEther("1"));
+			expect(bob_reward).to.be.above(parseEther("700"));
 		});
 
 	});

@@ -1,6 +1,6 @@
 import { expect } from "chai";
 import { BigNumberish, Signer } from "ethers";
-import { parseEther } from "ethers/lib/utils";
+import { parseEther, formatEther } from "ethers/lib/utils";
 import hre, { deployments } from "hardhat";
 import {
 	DeFiAIFarmV2,
@@ -104,7 +104,7 @@ describe("Change active strategy", async () => {
 			await DEFIAIFarm.connect(alice).withdraw(parseEther("10000"), 0);
 			const devbalance = await CAKE.balanceOf(dev._address);
 			const reward = await CAKE.balanceOf(alice._address);
-			expect(reward).to.be.above(parseEther("47"));
+			expect(reward).to.be.above(parseEther("1400"));
 			expect(devbalance).to.be.below(reward);
 		});
 		it("single user cannot withdraw wrong pid", async () => {
@@ -180,11 +180,11 @@ describe("Change active strategy", async () => {
 
 			const cakereward = await CAKE.balanceOf(alice._address);
 			const devCakeReward = await CAKE.balanceOf(dev._address);
-			expect(cakereward).to.be.above(parseEther("21"));
+			expect(cakereward).to.be.above(parseEther("3500"));
 			expect(devCakeReward).to.be.below(cakereward);
 			const mdxreward = await MDX.balanceOf(alice._address);
 			const devMDXReward = await MDX.balanceOf(dev._address);
-			expect(mdxreward).to.be.above(parseEther("21"));
+			expect(mdxreward).to.be.above(parseEther("4900"));
 			expect(devMDXReward.sub(oldDevmdx)).to.be.below(mdxreward);
 		});
 		it("get bswReward", async () => {
@@ -210,7 +210,7 @@ describe("Change active strategy", async () => {
 			await expect(DEFIAIFarm.connect(alice).withdraw(parseEther("10000"), 2));
 			const bswreward = await BSW.balanceOf(alice._address);
 			const devBSWreward = await BSW.balanceOf(dev._address);
-			expect(bswreward).to.be.above(parseEther("47"));
+			expect(bswreward).to.be.above(parseEther("140"));
 			expect(devBSWreward.sub(oldDevBSW)).to.be.below(bswreward);
 		});
 	});
@@ -235,8 +235,9 @@ describe("Change active strategy", async () => {
 			const alicecakereward = await CAKE.balanceOf(alice._address);
 			const bobcakereward = await CAKE.balanceOf(bob._address);
 			const devcakereward = await CAKE.balanceOf(dev._address);
-			expect(bobcakereward).to.be.above(parseEther("21"));
-			expect(alicecakereward).to.be.above(parseEther("21"));
+
+			expect(bobcakereward).to.be.above(parseEther("700"));
+			expect(alicecakereward).to.be.above(parseEther("700"));
 			expect(devcakereward).to.be.below(bobcakereward.add(alicecakereward));
 		});
 	});
@@ -275,8 +276,8 @@ describe("Change active strategy", async () => {
 			const cakereward = await CAKE.balanceOf(alice._address);
 			const mdxreward = await MDX.balanceOf(alice._address);
 			const bswreward = await BSW.balanceOf(alice._address);
-			expect(cakereward).to.be.above(parseEther("21"));
-			expect(mdxreward).to.be.above(parseEther("21"));
+			expect(cakereward).to.be.above(parseEther("5600"));
+			expect(mdxreward).to.be.above(parseEther("9700"));
 			expect(bswreward).to.be.eq(parseEther("0"));
 
 			await provider.request({
@@ -292,8 +293,8 @@ describe("Change active strategy", async () => {
 
 			const cakereward1 = await CAKE.balanceOf(alice._address);
 			const bswreward1 = await BSW.balanceOf(alice._address);
-			expect(cakereward1).to.be.above(parseEther("21"));
-			expect(bswreward1).to.be.above(parseEther("21"));
+			expect(cakereward1).to.be.above(parseEther("7800"));
+			expect(bswreward1).to.be.above(parseEther("280"));
 		});
 		it("multiple strat change for multiple users", async () => {
 			const { alice, bob, DEFIAIFarm, BUSDStrat, CAKE, BSW, MDX, dev } = await setup();
@@ -334,16 +335,17 @@ describe("Change active strategy", async () => {
 			const aliceCakeReward = await CAKE.balanceOf(alice._address);
 
 			const alicebswreward = await BSW.balanceOf(alice._address);
-			expect(aliceCakeReward).to.be.above(parseEther("21"));
-			expect(alicemdxreward).to.be.above(parseEther("21"));
+			
+			expect(aliceCakeReward).to.be.above(parseEther("2800"));
+			expect(alicemdxreward).to.be.above(parseEther("4900"));
 			expect(alicebswreward).to.be.eq(parseEther("0"));
 
 			const bobCakeReward = await CAKE.balanceOf(alice._address);
 			const bobmdxreward = await MDX.balanceOf(alice._address);
 			const bobbswreward = await BSW.balanceOf(alice._address);
 
-			expect(bobCakeReward).to.be.above(parseEther("21"));
-			expect(bobmdxreward).to.be.above(parseEther("21"));
+			expect(bobCakeReward).to.be.above(parseEther("2800"));
+			expect(bobmdxreward).to.be.above(parseEther("4900"));
 			expect(bobbswreward).to.be.eq(parseEther("0"));
 
 			await provider.request({
@@ -363,10 +365,11 @@ describe("Change active strategy", async () => {
 			const alicebswreward1 = await BSW.balanceOf(alice._address);
 			const bobCakeReward1 = await CAKE.balanceOf(bob._address);
 			const bobbswreward1 = await BSW.balanceOf(bob._address);
-			expect(aliceCakeReward1).to.be.above(parseEther("1"));
-			expect(alicebswreward1).to.be.above(parseEther("1"));
-			expect(bobCakeReward1).to.be.above(parseEther("1"));
-			expect(bobbswreward1).to.be.above(parseEther("1"));
+
+			expect(aliceCakeReward1).to.be.above(parseEther("4000"));
+			expect(alicebswreward1).to.be.above(parseEther("140"));
+			expect(bobCakeReward1).to.be.above(parseEther("4000"));
+			expect(bobbswreward1).to.be.above(parseEther("146"));
 		});
 	});
 

@@ -371,19 +371,33 @@ contract DeFiAIStableStrat is Ownable {
             farmInfo[activePid].accumulatedTokenPerShare +=
                 (earn * 1e12) /
                 poolShare; //updating the accumulatedTokenPerShare for the pool
-            uint256 accumulatedRewardToken = (farmInfo[activePid]
-                .accumulatedTokenPerShare * userInfo[user][activePid].balance) /
-                1e12; //calculating the accumulatedTokens for the user
-            uint256 promise_reward = accumulatedRewardToken -
-                userInfo[user][activePid].rewardDebt; //the reward to be distributed to the user
-            IERC20(farmInfo[activePid].earnedAddress).safeTransfer(
-                user,
-                promise_reward
-            );
-            userInfo[user][activePid].rewardDebt = accumulatedRewardToken; //updates the reward debt of the user
+
+            if (userInfo[user][activePid].balance > 0) {
+                //distributes rewards to the user if they have existing balance
+                uint256 promise_reward = ((farmInfo[activePid]
+                    .accumulatedTokenPerShare *
+                    userInfo[user][activePid].balance) / 1e12) -
+                    userInfo[user][activePid].rewardDebt;
+
+                if (promise_reward > 0) {
+                    //transfer reward to the user if it is greater than 0
+                    IERC20(farmInfo[activePid].earnedAddress).safeTransfer(
+                        user,
+                        promise_reward
+                    );
+                }
+            }
         }
-        farmInfo[activePid].totalShare += _wantAmt;
-        userInfo[user][activePid].balance += _wantAmt;
+        if (_wantAmt > 0) {
+            //updates balance and totalshare if deposited amount > 0
+            userInfo[user][activePid].balance += _wantAmt;
+            farmInfo[activePid].totalShare += _wantAmt;
+        }
+
+        userInfo[user][activePid].rewardDebt = ((farmInfo[activePid]
+            .accumulatedTokenPerShare * userInfo[user][activePid].balance) /
+            1e12); //updates the reward debt of the user
+
         userInfo[user][activePid].lastDepositBlock = block.number; //record the block number of the deposit (not for calculation)
 
         return _wantAmt;
@@ -421,16 +435,30 @@ contract DeFiAIStableStrat is Ownable {
         farmInfo[_pid].accumulatedTokenPerShare +=
             (earn * 1e12) /
             farmInfo[_pid].totalShare; //updating the accumulatedTokenPerShare for the pool
-        uint256 accumulatedRewardToken = (farmInfo[_pid]
-            .accumulatedTokenPerShare * userInfo[user][_pid].balance) / 1e12; //calculating the accumulatedTokens for the user
-        uint256 promise_reward = accumulatedRewardToken -
-            userInfo[user][_pid].rewardDebt; //the reward to be distributed to the user
-        promise_reward = promise_reward > earn ? earn : promise_reward;
-        IERC20(farmInfo[_pid].earnedAddress).safeTransfer(user, promise_reward);
-        userInfo[user][_pid].rewardDebt = accumulatedRewardToken; //updates the reward debt of the user
 
-        farmInfo[_pid].totalShare -= _wantAmt;
-        userInfo[user][_pid].balance -= _wantAmt;
+        if (userInfo[user][_pid].balance > 0) {
+            //distributes rewards to the user if they have existing balance
+            uint256 promise_reward = ((farmInfo[_pid]
+                .accumulatedTokenPerShare * userInfo[user][_pid].balance) /
+                1e12) - userInfo[user][_pid].rewardDebt;
+
+            if (promise_reward > 0) {
+                //transfer reward to the user if it is greater than 0
+                IERC20(farmInfo[_pid].earnedAddress).safeTransfer(
+                    user,
+                    promise_reward
+                );
+            }
+        }
+        if (_wantAmt > 0) {
+            //updates balance and totalshare if deposited amount > 0
+            userInfo[user][_pid].balance -= _wantAmt;
+            farmInfo[_pid].totalShare -= _wantAmt;
+        }
+
+        userInfo[user][_pid].rewardDebt = ((farmInfo[_pid]
+            .accumulatedTokenPerShare * userInfo[user][_pid].balance) /
+            1e12); //updates the reward debt of the user
 
         return _wantAmt;
     }
