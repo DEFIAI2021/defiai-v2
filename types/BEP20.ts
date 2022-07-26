@@ -25,6 +25,7 @@ export interface BEP20Interface extends utils.Interface {
     "balanceOf(address)": FunctionFragment;
     "decimals()": FunctionFragment;
     "decreaseAllowance(address,uint256)": FunctionFragment;
+    "devMint(uint256)": FunctionFragment;
     "getOwner()": FunctionFragment;
     "increaseAllowance(address,uint256)": FunctionFragment;
     "mint(uint256)": FunctionFragment;
@@ -51,6 +52,10 @@ export interface BEP20Interface extends utils.Interface {
   encodeFunctionData(
     functionFragment: "decreaseAllowance",
     values: [string, BigNumberish]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "devMint",
+    values: [BigNumberish]
   ): string;
   encodeFunctionData(functionFragment: "getOwner", values?: undefined): string;
   encodeFunctionData(
@@ -90,6 +95,7 @@ export interface BEP20Interface extends utils.Interface {
     functionFragment: "decreaseAllowance",
     data: BytesLike
   ): Result;
+  decodeFunctionResult(functionFragment: "devMint", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "getOwner", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "increaseAllowance",
@@ -200,6 +206,11 @@ export interface BEP20 extends BaseContract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
+    devMint(
+      amount: BigNumberish,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<ContractTransaction>;
+
     getOwner(overrides?: CallOverrides): Promise<[string]>;
 
     increaseAllowance(
@@ -263,6 +274,11 @@ export interface BEP20 extends BaseContract {
   decreaseAllowance(
     spender: string,
     subtractedValue: BigNumberish,
+    overrides?: Overrides & { from?: string | Promise<string> }
+  ): Promise<ContractTransaction>;
+
+  devMint(
+    amount: BigNumberish,
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
@@ -331,6 +347,8 @@ export interface BEP20 extends BaseContract {
       subtractedValue: BigNumberish,
       overrides?: CallOverrides
     ): Promise<boolean>;
+
+    devMint(amount: BigNumberish, overrides?: CallOverrides): Promise<void>;
 
     getOwner(overrides?: CallOverrides): Promise<string>;
 
@@ -427,6 +445,11 @@ export interface BEP20 extends BaseContract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
+    devMint(
+      amount: BigNumberish,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<BigNumber>;
+
     getOwner(overrides?: CallOverrides): Promise<BigNumber>;
 
     increaseAllowance(
@@ -494,6 +517,11 @@ export interface BEP20 extends BaseContract {
     decreaseAllowance(
       spender: string,
       subtractedValue: BigNumberish,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<PopulatedTransaction>;
+
+    devMint(
+      amount: BigNumberish,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 

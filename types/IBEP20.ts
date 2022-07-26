@@ -127,7 +127,7 @@ export interface IBEP20 extends BaseContract {
 
   functions: {
     allowance(
-      owner: string,
+      _owner: string,
       spender: string,
       overrides?: CallOverrides
     ): Promise<[BigNumber]>;
@@ -165,7 +165,7 @@ export interface IBEP20 extends BaseContract {
   };
 
   allowance(
-    owner: string,
+    _owner: string,
     spender: string,
     overrides?: CallOverrides
   ): Promise<BigNumber>;
@@ -203,7 +203,7 @@ export interface IBEP20 extends BaseContract {
 
   callStatic: {
     allowance(
-      owner: string,
+      _owner: string,
       spender: string,
       overrides?: CallOverrides
     ): Promise<BigNumber>;
@@ -266,7 +266,7 @@ export interface IBEP20 extends BaseContract {
 
   estimateGas: {
     allowance(
-      owner: string,
+      _owner: string,
       spender: string,
       overrides?: CallOverrides
     ): Promise<BigNumber>;
@@ -305,7 +305,7 @@ export interface IBEP20 extends BaseContract {
 
   populateTransaction: {
     allowance(
-      owner: string,
+      _owner: string,
       spender: string,
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;

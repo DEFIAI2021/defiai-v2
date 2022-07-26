@@ -214,4 +214,8 @@ npx hardhat test
 ### Note for block numbers:
 - Block numbers are not used for calculation purposes. They are only used to record the block for users' last deposit, and prevent them from making a withdrawal in the same/next block, to prevent a flashloan attack.
 
+### Note for testnet environment
+- The main contracts of the system are DeFiAIFarmv2.sol, DeFiAIStrat.sol, IDefiMultiStrat.sol and IDeFiAIStrat.sol. Besides these contracts, the other third-part contracts are used for the testnet and unit testing environments for the purpose of mocking the mainnet environment. The mainnet deployment will be using the respective contracts already deployed by the third-party farms.
+
+
  
