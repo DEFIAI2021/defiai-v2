@@ -2,7 +2,7 @@
 
 pragma solidity 0.8.4;
 
-interface IDeFiAIMultiStrat {
+interface IDeFiAIStableStrat  {
     function deposit(
         address user,
         uint256 _wantAmt,

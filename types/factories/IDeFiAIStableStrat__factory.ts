@@ -5,9 +5,9 @@
 import { Contract, Signer, utils } from "ethers";
 import { Provider } from "@ethersproject/providers";
 import type {
-  IDeFiAIMultiStrat,
-  IDeFiAIMultiStratInterface,
-} from "../IDeFiAIMultiStrat";
+  IDeFiAIStableStrat,
+  IDeFiAIStableStratInterface,
+} from "../IDeFiAIStableStrat";
 
 const _abi = [
   {
@@ -112,15 +112,15 @@ const _abi = [
   },
 ];
 
-export class IDeFiAIMultiStrat__factory {
+export class IDeFiAIStableStrat__factory {
   static readonly abi = _abi;
-  static createInterface(): IDeFiAIMultiStratInterface {
-    return new utils.Interface(_abi) as IDeFiAIMultiStratInterface;
+  static createInterface(): IDeFiAIStableStratInterface {
+    return new utils.Interface(_abi) as IDeFiAIStableStratInterface;
   }
   static connect(
     address: string,
     signerOrProvider: Signer | Provider
-  ): IDeFiAIMultiStrat {
-    return new Contract(address, _abi, signerOrProvider) as IDeFiAIMultiStrat;
+  ): IDeFiAIStableStrat {
+    return new Contract(address, _abi, signerOrProvider) as IDeFiAIStableStrat;
   }
 }

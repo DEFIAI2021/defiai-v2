@@ -4,7 +4,7 @@ pragma solidity 0.8.4;
 
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
-import "./interfaces/IDeFiAIMultiStrat.sol";
+import "./interfaces/IDeFiAIStableStrat.sol";
 
 contract DeFiAIFarmV2 is Ownable {
     using SafeERC20 for IERC20;
@@ -60,7 +60,7 @@ contract DeFiAIFarmV2 is Ownable {
     }
 
     function getTotalBalance(address _user) external view returns (uint256) {
-        return IDeFiAIMultiStrat(poolInfo.strat).balances(_user);
+        return IDeFiAIStableStrat (poolInfo.strat).balances(_user);
     }
 
     function getDevAddress() external view returns (address) {
@@ -83,7 +83,7 @@ contract DeFiAIFarmV2 is Ownable {
         );
 
         poolInfo.want.safeIncreaseAllowance(poolInfo.strat, _wantAmt);
-        IDeFiAIMultiStrat(poolInfo.strat).deposit(
+        IDeFiAIStableStrat (poolInfo.strat).deposit(
             msg.sender,
             _wantAmt,
             address(poolInfo.want)
@@ -95,7 +95,7 @@ contract DeFiAIFarmV2 is Ownable {
     function withdraw(uint256 _wantAmt, uint8 _pid) external {
         require(_wantAmt > 0, "amount is negative");
 
-        _wantAmt = IDeFiAIMultiStrat(poolInfo.strat).withdraw(
+        _wantAmt = IDeFiAIStableStrat (poolInfo.strat).withdraw(
             _pid,
             msg.sender,
             _wantAmt,

@@ -58,7 +58,7 @@ export type { DeFiAIStableStrat } from "./DeFiAIStableStrat";
 export type { IUniswapV2Router01 } from "./IUniswapV2Router01";
 export type { DeFiAIStrat } from "./DeFiAIStrat";
 export type { FakeToken } from "./FakeToken";
-export type { IDeFiAIMultiStrat } from "./IDeFiAIMultiStrat";
+export type { IDeFiAIStableStrat } from "./IDeFiAIStableStrat";
 export type { IDeFiAIStrat } from "./IDeFiAIStrat";
 export type { IPancakeswapFarm } from "./IPancakeswapFarm";
 
@@ -119,6 +119,6 @@ export { DeFiAIStableStrat__factory } from "./factories/DeFiAIStableStrat__facto
 export { IUniswapV2Router01__factory } from "./factories/IUniswapV2Router01__factory";
 export { DeFiAIStrat__factory } from "./factories/DeFiAIStrat__factory";
 export { FakeToken__factory } from "./factories/FakeToken__factory";
-export { IDeFiAIMultiStrat__factory } from "./factories/IDeFiAIMultiStrat__factory";
+export { IDeFiAIStableStrat__factory } from "./factories/IDeFiAIStableStrat__factory";
 export { IDeFiAIStrat__factory } from "./factories/IDeFiAIStrat__factory";
 export { IPancakeswapFarm__factory } from "./factories/IPancakeswapFarm__factory";

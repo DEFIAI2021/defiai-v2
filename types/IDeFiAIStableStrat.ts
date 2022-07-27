@@ -17,8 +17,8 @@ import { FunctionFragment, Result } from "@ethersproject/abi";
 import { Listener, Provider } from "@ethersproject/providers";
 import { TypedEventFilter, TypedEvent, TypedListener, OnEvent } from "./common";
 
-export interface IDeFiAIMultiStratInterface extends utils.Interface {
-  contractName: "IDeFiAIMultiStrat";
+export interface IDeFiAIStableStratInterface extends utils.Interface {
+  contractName: "IDeFiAIStableStrat";
   functions: {
     "balances(address)": FunctionFragment;
     "claimReward(uint8,address)": FunctionFragment;
@@ -51,13 +51,13 @@ export interface IDeFiAIMultiStratInterface extends utils.Interface {
   events: {};
 }
 
-export interface IDeFiAIMultiStrat extends BaseContract {
-  contractName: "IDeFiAIMultiStrat";
+export interface IDeFiAIStableStrat extends BaseContract {
+  contractName: "IDeFiAIStableStrat";
   connect(signerOrProvider: Signer | Provider | string): this;
   attach(addressOrName: string): this;
   deployed(): Promise<this>;
 
-  interface: IDeFiAIMultiStratInterface;
+  interface: IDeFiAIStableStratInterface;
 
   queryFilter<TEvent extends TypedEvent>(
     event: TypedEventFilter<TEvent>,
